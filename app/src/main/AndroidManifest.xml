@@ -28,4 +28,13 @@
         </activity>
     </application>
 
+
+    <!--
+permission nauhoitukseen, toimiakseen piti olla </application> jälkeen vasta   -->
+    <uses-permission android:name="android.permission.RECORD_AUDIO" />
+
+    <!--   saattaa olla turha? -->
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
+
+
 </manifest>
