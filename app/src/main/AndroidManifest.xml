@@ -2,6 +2,12 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
           package="com.example.janne.smartstopwatch01">
 
+    <!-- permission nauhoitukseen, toimiakseen piti olla </application> jälkeen vasta -->
+    <uses-permission android:name="android.permission.RECORD_AUDIO"/>
+
+    <!-- saattaa olla turha? -->
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/>
+
     <application
             android:allowBackup="true"
             android:icon="@mipmap/ic_launcher"
@@ -26,15 +32,14 @@
         </activity>
         <activity android:name=".CountHistoryActivity">
         </activity>
+        <activity android:name=".stopWatchTest">
+        </activity>
+        <activity android:name=".chronoTest">
+        </activity>
+        <activity android:name=".StopWatchProperActivity">
+        </activity>
+        <activity android:name=".StopWatchActivity">
+        </activity>
     </application>
-
-
-    <!--
-permission nauhoitukseen, toimiakseen piti olla </application> jälkeen vasta   -->
-    <uses-permission android:name="android.permission.RECORD_AUDIO" />
-
-    <!--   saattaa olla turha? -->
-    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
-
 
 </manifest>
