@@ -1,36 +1,99 @@
 package com.example.janne.smartstopwatch01
 
 import android.Manifest
+import android.content.Context
 import android.content.pm.PackageManager
+import android.graphics.Color
 import android.media.AudioFormat
 import android.media.AudioRecord
+import android.media.MediaPlayer
 import android.media.MediaRecorder
-import android.support.v7.app.AppCompatActivity
 import android.os.Bundle
+import android.os.CountDownTimer
 import android.support.v4.app.ActivityCompat
+import android.support.v7.app.AppCompatActivity
 import android.view.Window
 import android.view.WindowManager
-import android.widget.ImageView
+import android.widget.SeekBar
+import com.jjoe64.graphview.GraphView
+import com.jjoe64.graphview.series.DataPoint
+import com.jjoe64.graphview.series.LineGraphSeries
+import com.jjoe64.graphview.series.PointsGraphSeries
+import kotlinx.android.synthetic.main.activity_reaction.*
+import org.jetbrains.anko.longToast
+import org.jetbrains.anko.sdk25.coroutines.onClick
+import org.jetbrains.anko.toast
+import java.io.FileNotFoundException
+import java.io.IOException
+import java.util.*
 
 
 class ReactionActivity : AppCompatActivity() {
 
 
-
+    private var count  : Int = 0
     private var audioRec: AudioRecord? = null
     private var bufferSize: Int = 0
     private var ViimeisinMaxAmplitude = 0.0
     private var thread: Thread? = null
-    //private var mouthImage: ImageView? = null
+    private var CalibrationThread : Thread? = null
+    private var CalibrationInProgress : Boolean = true
+    private var HowLongSinceLastHit = 0
+    private var WaitBeforeStartCountingAgain = 3
+
+    //private var hasRoundStarted : Boolean = false
+    private var RoundEnding : Boolean = false
+
+    private var maxAmpEver = 0
+
+    private var threshold = 60
+    var thresholdDouble : Double = threshold.toDouble()
+    //private var thresholdStrIntDUMP : String = "61"
+
+    //graph
+    lateinit var series: LineGraphSeries<DataPoint>
+    lateinit var seriesHITs: PointsGraphSeries<DataPoint>
+    lateinit var thresholdLineinGraph : LineGraphSeries<DataPoint>
+    lateinit var seriesReaction: LineGraphSeries<DataPoint>
+    lateinit var seriesHardReset: PointsGraphSeries<DataPoint>
+    var Yline : Double = 0.0
+    var x : Double = 0.0
+    var xReaction : Double = 0.0
 
 
+    private var RoundLength : Int = 2
+    private var hours = 0
+    private var minutes = 0
+    private var seconds = 0
+    private var millis = 0
+    private var aikaTekstiksi : Long = 0
+    private var RoundHasStarted : Boolean = false
+
+    //seekbars
+    lateinit var sb_Threshold : SeekBar
+    lateinit var sb_RandomMin : SeekBar
+    lateinit var sb_RandomMax : SeekBar
+    lateinit var sb_RoundLength : SeekBar
+
+    //random
+    var satunnaisGeneraattori = Random()
+    private var RandomMin : Int = 1000
+    private var RandomMax : Int = 5000
+    //var randomSeku = satunnaisGeneraattori.nextInt(RandomMax) + RandomMin              //1000 ... 5000 random   1 ... 5 sekunttia
+    //var randomSekuLong : Long = randomSeku.toLong()                           // .schedule tarvii Longin
+
+    //var sekunttiKellottaja = Timer()
+
+    var BeepToHitDetectedTIMEstart = 0
+    var ReactionResultTIME = 0
+    var arrayReactionResult : MutableList<Int>? = mutableListOf(1)
 
 
+    //          PERMISSIONS                         ------------------------------------------
     // Permissions jatkuu onCreatesssa (activityCompat.request...)   ja   lopussa companion object (private val REQUEST_RECORD_AUDIO_PERMISSION = 200)
     // Requesting permission to RECORD_AUDIO
     private var permissionToRecordAccepted = false
     private val permissions = arrayOf(Manifest.permission.RECORD_AUDIO)
-
     //tähän onRequestPermissionResult
     override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<String>, grantResults: IntArray) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
@@ -42,14 +105,25 @@ class ReactionActivity : AppCompatActivity() {
 
 
 
+    //      ON CREATE       -------------------------------------------------------------------
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-
+        println("KONSOLI   :  OnCreate alkaa ------------------------------------------------------------ ")
         //permissions
-       ActivityCompat.requestPermissions(this, permissions, REQUEST_RECORD_AUDIO_PERMISSION)
+        ActivityCompat.requestPermissions(this, permissions, REQUEST_RECORD_AUDIO_PERMISSION)
 
+        // fullscreen setit
+        requestWindowFeature(Window.FEATURE_NO_TITLE)
+        window.setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN,
+                WindowManager.LayoutParams.FLAG_FULLSCREEN)
+        setContentView(R.layout.activity_reaction)
+        supportActionBar!!.hide()
 
+        //luultavasti turha. tää vaan "nollaa" arrayReactionResult mutableListan, en kato osannut muuten initializoida sitä kun antamalla sinne arvon 1 indeksiin[0]
+        arrayReactionResult!!.removeAt(0)
+
+        //buffersize determination
         for (rate in intArrayOf(44100, 22050, 11025, 16000, 8000)) {  // add the rates you wish to check against
             bufferSize = AudioRecord.getMinBufferSize(rate, AudioFormat.CHANNEL_IN_MONO, AudioFormat.ENCODING_PCM_16BIT)
             if (bufferSize > 0) {
@@ -60,83 +134,646 @@ class ReactionActivity : AppCompatActivity() {
         }
 
 
-        // fullscreen setit
-        requestWindowFeature(Window.FEATURE_NO_TITLE)
-        window.setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN,
-                WindowManager.LayoutParams.FLAG_FULLSCREEN)
-        setContentView(R.layout.activity_reaction)
-        supportActionBar!!.hide()
+        // SEEKBARit
+        sb_RandomMin = findViewById(R.id.sb_RandomMin) as SeekBar
+        sb_RandomMin.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener{
+            override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {
+                tv_RandomMinSlider.text = "${sb_RandomMin.progress}"
+                RandomMin = sb_RandomMin.progress * 1000
+            }
+            override fun onStartTrackingTouch(seekBar: SeekBar?) {}
+            override fun onStopTrackingTouch(seekBar: SeekBar?) {}
+        })
+
+        sb_RandomMax = findViewById(R.id.sb_RandomMax) as SeekBar
+        sb_RandomMax.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener{
+            override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {
+                tv_RandomMaxSlider.text = "${sb_RandomMax.progress}"
+                RandomMax = sb_RandomMax.progress * 1000
+            }
+            override fun onStartTrackingTouch(seekBar: SeekBar?) {}
+            override fun onStopTrackingTouch(seekBar: SeekBar?) {}
+        })
+
+        sb_Threshold = findViewById(R.id.sb_Threshold) as SeekBar
+        sb_Threshold.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
+            override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {
+                threshold = sb_Threshold.progress
+                thresholdDouble = threshold.toDouble()
+                tv_ThresholdSlider.text = "${sb_Threshold.progress}"
+                println("KONSOLI   :  threshold set to : $threshold")
+
+            }
+            override fun onStartTrackingTouch(seekBar: SeekBar?) {}
+            override fun onStopTrackingTouch(seekBar: SeekBar?) {}
+        })
+
+        sb_RoundLength = findViewById(R.id.sb_RoundLength) as SeekBar
+        sb_RoundLength.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener{
+            override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {
+                RoundLength = sb_RoundLength.progress
+                tv_RoundLength.text = "${sb_RoundLength.progress}"
+                println("KONSOLI   : round length   : $RoundLength")
+            }
+            override fun onStartTrackingTouch(seekBar: SeekBar?) {}
+            override fun onStopTrackingTouch(seekBar: SeekBar?) {}
+        })
 
 
-    }
+        // NAPIT
+        buttReactionCalibration.onClick        { resetProgress() }
+        buttReactionStart.onClick              { aloita() }
 
 
+        // GRAPHit  <
+        var graphview : GraphView = findViewById(R.id.graph) as GraphView
+        var HistoryGraph : GraphView = findViewById(R.id.historyGraph) as GraphView
+
+        //ääni graafit
+            series = LineGraphSeries<DataPoint>()
+            seriesHITs = PointsGraphSeries<DataPoint>()
+            thresholdLineinGraph = LineGraphSeries<DataPoint>()
+            seriesHardReset = PointsGraphSeries<DataPoint>()
+
+            seriesHardReset.color = Color.RED
+            seriesHITs.color = Color.RED
+            seriesHardReset.size = 60f
+            seriesHITs.size = 60f
+
+            series.thickness = 15
+
+            graph.gridLabelRenderer.isVerticalLabelsVisible = false
+            graph.gridLabelRenderer.isHorizontalLabelsVisible = false
+            graph.gridLabelRenderer.isHighlightZeroLines = false
+
+            graph.gridLabelRenderer.gridColor = 0
+
+            graphview.getViewport().setScrollable(true)
+
+            // set manual Y bounds
+            graph.getViewport().setYAxisBoundsManual(true)
+            graph.getViewport().setMinY(0.0)
+            graphview.getViewport().setMaxY(32000.0)
+
+            // set manual X bounds
+            graph.getViewport().setXAxisBoundsManual(true)
+            graph.getViewport().setMinX(0.0)
+            graph.getViewport().setMaxX(50.0)
+
+            //reaktio graafi
+            seriesReaction = LineGraphSeries<DataPoint>()
+            HistoryGraph.getViewport().setScrollable(true)
+            HistoryGraph.getViewport().setXAxisBoundsManual(true)
+            HistoryGraph.getViewport().setYAxisBoundsManual(true)
+            HistoryGraph.getViewport().setMaxX(50.0)
+            HistoryGraph.getViewport().setMinX(0.0)
+            HistoryGraph.getViewport().setMaxY(3000.0)
+            HistoryGraph.getViewport().setMinY(0.0)
+            HistoryGraph.gridLabelRenderer.isHorizontalLabelsVisible = false
+
+        /*
+        for (i in 0..400)
+        {
+            x += 0.1
+            y = 5.0
+            series.appendData(DataPoint(x,y), true, 500)
+        }
+
+        graphview.addSeries(series)
+        */
+        // graph loppuu >
 
 
-    override fun onResume() {
-        super.onResume()
-
-        // initializing audioRec
-        println("KONSOLI   : initializing AudioRec")
+        // ALOITTAA kalibrointia varten olevan graafin  eli se graafi mikä alkaa piirtämään heti viivaa
         audioRec = AudioRecord(MediaRecorder.AudioSource.MIC, sampleRate,
                 AudioFormat.CHANNEL_IN_MONO,
                 AudioFormat.ENCODING_PCM_16BIT, bufferSize)
 
         audioRec!!.startRecording()
-        thread = Thread(Runnable {
-            while (thread != null && !thread!!.isInterrupted) {
-                //Let's make the thread sleep for a the approximate sampling time
+
+
+        println("KONSOLI   : Calibration Thread alkamassa")
+        CalibrationThread = Thread(Runnable {
+            while (CalibrationThread != null && !CalibrationThread!!.isInterrupted && CalibrationInProgress == true) {
+                //sleep  for SAMPLE_DELAY tutkimisen välissä
                 try {
                     Thread.sleep(SAMPLE_DELAY.toLong())
                 } catch (ie: InterruptedException) {
                     ie.printStackTrace()
                 }
 
-                MaxAmplitudeTest()//After this call we can get the last value assigned to the maxAmp variable
+                MaxAmplitudeTest()      //maxAmp testi
+
+                x = x + 1
+                series.appendData(DataPoint(x,ViimeisinMaxAmplitude), true, 50)
+
+                Yline = thresholdDouble
+                thresholdLineinGraph.appendData(DataPoint(x, Yline), true, 50)
+
+
+                //tämä tarvii olla jottei kaadu heti 50x mittauksen jälkeen...
+                if (x.toInt() % 50 == 1) {
+                    graph.removeAllSeries()
+                    graph.addSeries(series)
+                    graph.addSeries(seriesHITs)
+                    graph.addSeries(thresholdLineinGraph)
+                }
+
+                println("KONSOLI   :   TOTAL THREADS :  ${Thread.activeCount()} ")
+
+            }})
+
+                CalibrationThread!!.start()
+    }
+
+
+
+
+
+
+    //onResume alkaa aina onCreaten (tai onStartin) jälkeen ja lisäksi onPausen jälkeen.
+    override fun onResume() {
+        super.onResume()
+/*
+        // initializing audioRec
+        println("KONSOLI   : initializing AudioRec")                            //  TYÖ  jostain syystä tää tulee 2x
+        audioRec = AudioRecord(MediaRecorder.AudioSource.MIC, sampleRate,
+                AudioFormat.CHANNEL_IN_MONO,
+                AudioFormat.ENCODING_PCM_16BIT, bufferSize)
+
+        audioRec!!.startRecording()
+
+        thread = Thread(Runnable {
+            while (thread != null && !thread!!.isInterrupted) {
+                //sleep  for SAMPLE_DELAY tutkimisen välissä
+                try {
+                    Thread.sleep(SAMPLE_DELAY.toLong())
+                } catch (ie: InterruptedException) {
+                    ie.printStackTrace()
+                }
+
+                MaxAmplitudeTest()      //maxAmp testi
 
                 when {
-                    ViimeisinMaxAmplitude > 60  -> println("KONSOLI   : $SAMPLE_DELAY ms,  ${ViimeisinMaxAmplitude.toInt()} +++++++")
-                    else                        -> println("KONSOLI   : $SAMPLE_DELAY ms,  ${ViimeisinMaxAmplitude.toInt()} -")
+                    ViimeisinMaxAmplitude > 60    -> hitDetected()
+                    ViimeisinMaxAmplitude == 0.0  -> println("KONSOLI   : total:${Thread.activeCount()}  this.ID:${Thread.currentThread().id}  $SAMPLE_DELAY ms,  ${ViimeisinMaxAmplitude.toInt()}   default")
+                    else                          -> println("KONSOLI   : total:${Thread.activeCount()}  this.ID:${Thread.currentThread().id}  $SAMPLE_DELAY ms,  ${ViimeisinMaxAmplitude.toInt()} -")
                 }
-
-                /*
-                runOnUiThread {
-                    if (ViimeisinMaxAmplitude > 0 && ViimeisinMaxAmplitude <= 50) {
-                        mouthImage!!.setImageResource(R.drawable.mouth4)
-                    } else if (ViimeisinMaxAmplitude > 50 && ViimeisinMaxAmplitude <= 100) {
-                        mouthImage!!.setImageResource(R.drawable.mouth3)
-                    } else if (ViimeisinMaxAmplitude > 100 && ViimeisinMaxAmplitude <= 170) {
-                        mouthImage!!.setImageResource(R.drawable.mouth2)
-                    }
-                    if (ViimeisinMaxAmplitude > 170) {
-                        mouthImage!!.setImageResource(R.drawable.mouth1)
-                    }
-                    println("KONSOLI   : maxAmp  =  $ViimeisinMaxAmplitude")
-                }
-                */
             }
         })
+
+        println("KONSOLI   : total:${Thread.activeCount()}  this.ID:${Thread.currentThread().id}  THREAD LOPPUI     ***      ***")
         thread!!.start()
+        */
+    }
+
+
+    private fun hitDetected() {
+        if (HowLongSinceLastHit > WaitBeforeStartCountingAgain) {
+            //println("KONSOLI   : total:${Thread.activeCount()}  this.ID:${Thread.currentThread().id}  $SAMPLE_DELAY ms,  ${ViimeisinMaxAmplitude.toInt()} BING BING !!!!!")
+            count = count + 1
+            println("KONSOLI   : KOUNTTI  $count")
+
+            //
+            ReactionResultTIME = BeepToHitDetectedTIMEstart - System.currentTimeMillis().toInt()
+            println("KONSOLI   :   varsinainen AIKA :    $ReactionResultTIME")
+
+            runOnUiThread { tvHistory.text = "${ViimeisinMaxAmplitude.toInt()} \n ${tvHistory.text}" }
+
+            //jottei HIT punainen pallo mene chartista yli...
+            if (ViimeisinMaxAmplitude > 200) {
+                seriesHITs.appendData(DataPoint(x, 200.0), true, 50)
+            } else {
+                seriesHITs.appendData(DataPoint(x, ViimeisinMaxAmplitude), true, 50)
+            }
+
+            runOnUiThread {
+                tv_Count.text = "counttia  :  $count"
+            }
+            HowLongSinceLastHit = 0
+        }
+        else {
+            println("KONSOLI   : jälkitärinää vain.. NOT count")
+        }
+
+    }
+
+
+    private fun resetProgress() {
+        RoundEnding = true
+
+        //ei lopeta threadia :(
+        thread!!.interrupt()
+
+        count = 0
+
+        runOnUiThread { tv_info.text = "" }
+
+        CalibrationInProgress = false
+
+        seriesHITs = seriesHardReset
+        historyGraph.removeAllSeries()
+
+        arrayReactionResult!!.clear()
+
+        runOnUiThread { tv_Count.text = "Count : 0" }
+
+// tähän pitää saada seriesHITS reset!
+
+        CalibrationThread?.interrupt()
+
+        RoundEnding = false
+
+        println("KONSOLI   :  RESEToitu")
+    }
+
+
+    //wanha calibrate()
+/*
+    private fun calibrate() {
+
+        println("KONSOLI   : calibrate funktio alkaa ...")
+        // tähän looppi recordaamaan esim 20 kierrosta ja sitten katsomaan loudest noise.
+        //threshold = loudest noise * 0.8
+
+        // initializing audioRec
+        println("KONSOLI   : initializing AudioRec")                            //  TYÖ  jostain syystä tää tulee 2x
+        audioRec = AudioRecord(MediaRecorder.AudioSource.MIC, sampleRate,
+                AudioFormat.CHANNEL_IN_MONO,
+                AudioFormat.ENCODING_PCM_16BIT, bufferSize)
+
+        audioRec!!.startRecording()
+
+        //tee 20 kierrosta kalibroimista varten ja ota sieltä isoin AMP
+
+
+        thread = Thread(Runnable {
+            while (thread != null && !thread!!.isInterrupted) {
+                //sleep  for SAMPLE_DELAY tutkimisen välissä
+                try {
+                    Thread.sleep(SAMPLE_DELAY.toLong())
+                } catch (ie: InterruptedException) {
+                    ie.printStackTrace()
+                }
+                HowLongSinceLastHit += 1
+                MaxAmplitudeTest()      //maxAmp testi
+
+                // tallenna ViimeisinMaxAmplitude taulukkoon ja vertaile for loopin jälkeen k
+
+                if (ViimeisinMaxAmplitude > threshold) {
+                    hitDetected()
+                }
+
+                if (ViimeisinMaxAmplitude > maxAmpEver) {
+                    maxAmpEver = ViimeisinMaxAmplitude.toInt()
+                    runOnUiThread { tv_info.text ="max : $maxAmpEver" }
+                }
+
+
+                x = x + 1
+                series.appendData(DataPoint(x,ViimeisinMaxAmplitude), true, 25)
+
+                Yline = thresholdDouble
+                thresholdLineinGraph.appendData(DataPoint(x, Yline), true, 25)
+
+
+                //tämä tarvii olla jottei kaadu heti 50x mittauksen jälkeen...
+                if (x.toInt() % 25 == 1) {
+                    graph.removeAllSeries()
+                    graph.addSeries(series)
+                    graph.addSeries(seriesHITs)
+                    graph.addSeries(thresholdLineinGraph)
+                }
+
+                when {
+                    (ViimeisinMaxAmplitude < 10)                                      -> println("KONSOLI   :max amp on 0x   : ${ViimeisinMaxAmplitude.toInt()}  *")
+                    ((ViimeisinMaxAmplitude >=10) && (ViimeisinMaxAmplitude < 20))    -> println("KONSOLI   :max amp on 1x   : ${ViimeisinMaxAmplitude.toInt()}  **")
+                    ((ViimeisinMaxAmplitude >=20) && (ViimeisinMaxAmplitude < 30))    -> println("KONSOLI   :max amp on 2x   : ${ViimeisinMaxAmplitude.toInt()}  ***")
+                    ((ViimeisinMaxAmplitude >=30) && (ViimeisinMaxAmplitude < 40))    -> println("KONSOLI   :max amp on 3x   : ${ViimeisinMaxAmplitude.toInt()}  ****")
+                    ((ViimeisinMaxAmplitude >=40) && (ViimeisinMaxAmplitude < 50))    -> println("KONSOLI   :max amp on 4x   : ${ViimeisinMaxAmplitude.toInt()}  *****")
+                    ((ViimeisinMaxAmplitude >=50) && (ViimeisinMaxAmplitude < 60))    -> println("KONSOLI   :max amp on 5x   : ${ViimeisinMaxAmplitude.toInt()}  ******")
+                    ((ViimeisinMaxAmplitude >=60) && (ViimeisinMaxAmplitude < 70))    -> println("KONSOLI   :max amp on 6x   : ${ViimeisinMaxAmplitude.toInt()}  *******")
+                    ((ViimeisinMaxAmplitude >=70) && (ViimeisinMaxAmplitude < 80))    -> println("KONSOLI   :max amp on 7x   : ${ViimeisinMaxAmplitude.toInt()}  ********")
+                    ((ViimeisinMaxAmplitude >=80) && (ViimeisinMaxAmplitude < 90))    -> println("KONSOLI   :max amp on 8x   : ${ViimeisinMaxAmplitude.toInt()}  *********")
+                    ((ViimeisinMaxAmplitude >=90) && (ViimeisinMaxAmplitude < 100))   -> println("KONSOLI   :max amp on 9x   : ${ViimeisinMaxAmplitude.toInt()}  **********")
+                    ((ViimeisinMaxAmplitude >=100) && (ViimeisinMaxAmplitude < 110))  -> println("KONSOLI   :max amp on 10x  : ${ViimeisinMaxAmplitude.toInt()}  ***********")
+                    ((ViimeisinMaxAmplitude >=110) && (ViimeisinMaxAmplitude < 120))  -> println("KONSOLI   :max amp on 11x  : ${ViimeisinMaxAmplitude.toInt()}  MAXXXXXXXXXXXXX")
+                //ViimeisinMaxAmplitude > 60      -> hitDetected()
+                //ViimeisinMaxAmplitude == 0.0    -> println("KONSOLI   : total:${Thread.activeCount()}  this.ID:${Thread.currentThread().id}  $SAMPLE_DELAY ms,  ${ViimeisinMaxAmplitude.toInt()}   default")
+                    else                            -> println("KONSOLI   : total:${Thread.activeCount()}  this.ID:${Thread.currentThread().id}  $SAMPLE_DELAY ms,  ${ViimeisinMaxAmplitude.toInt()} -?????")
+                }
+            }
+        })
+
+        println("KONSOLI   : total:${Thread.activeCount()}  this.ID:${Thread.currentThread().id}  THREAD LOPPUI     ***      ***")
+        thread!!.start()
+
+    }
+*/
+
+
+    private fun aloita() {
+
+        //laittaa Round timerin päälle if count == 0
+
+        if (count == 0) {
+            runOnUiThread {
+                object : CountDownTimer(RoundLength.toLong() * 60 * 1000, 10) {
+                    override fun onTick(millisUntilFinished: Long) {
+
+                        aikaTekstiksi = millisUntilFinished
+                        millis = (aikaTekstiksi.toInt() % 1000)
+                        seconds = (aikaTekstiksi.toInt() / 1000) % 60
+                        minutes = (aikaTekstiksi.toInt() / 60000) % 60
+                        hours = (aikaTekstiksi.toInt() / 3600000) % 60
+                        tv_info.text = "$hours : $minutes : $seconds : $millis"
+                    }
+
+                    override fun onFinish() {
+                        tv_info.text = "ROUND END"
+                        val BoxingBell_ShortLoudEnd = MediaPlayer.create(applicationContext, R.raw.boxingbellshortloud)
+                        BoxingBell_ShortLoudEnd.start()
+                        RoundHasStarted = false
+                        EndTheRound()
+                    }
+
+                }.start()
+            }
+        }
+
+
+
+        // TYÖ pitäskö tähän laittaa mielluummin if CalibrationInProgress == true
+        if (count == 0) {
+            audioRec!!.stop()
+            audioRec!!.release()
+            audioRec = null
+        }
+
+        // TYÖ  if CalibrationInProgress == true
+        CalibrationThread?.interrupt()
+        CalibrationInProgress = false
+
+        // RANDOM
+        var RandomTimer = Timer()       // tämä on siis vain schedulea varten ei ole itsessään random. Satunnaisgeneraattori on se varsinainen random
+        var RandomBeepTime = satunnaisGeneraattori.nextInt(RandomMax) + RandomMin
+        println("KONSOLI   : randomBeep() $RandomBeepTime")
+
+        //jos eka kierros lähtee pyörimään
+        if (count == 0) {
+            RandomBeepTime = RandomBeepTime + 3000                          // lisää 3 sekunttia EKAAN randomiin
+            //runOnUiThread { toast("STARTING! in 3 sec!") }
+            runOnUiThread { longToast("Starting in 3 sec!") }               // normaalia pidempi aikainen Toast()
+        }
+
+
+        //TYÖ nämä on pelkkää testausta varten, eli voi kommentoida pois siksi aikaa kun et käytä näitä
+        //var stopWatchSTART = System.currentTimeMillis()
+        //var TESTINGScheduleRealTime = 0
+
+
+        //kierros lähtee tästä
+        RandomTimer.schedule(object : TimerTask() {
+            override fun run() {                                // run in class TimerTask
+
+                if (RoundEnding == false) {
+                    //Random start beeppaus
+                    val BeepSound = MediaPlayer.create(applicationContext, R.raw.beep)
+                    BeepSound.start()
+
+                    //aloita ajan mittaus ( ReactionHitDetected() saakka )
+                    BeepToHitDetectedTIMEstart = System.currentTimeMillis().toInt()
+
+                    //TESTINGScheduleRealTime = System.currentTimeMillis().toInt() - stopWatchSTART.toInt()
+                    //println("KONSOLI   : stopWatch millis :  $TESTINGScheduleRealTime")
+
+
+                    //tämä on varsinainen toiminta. AudioRec ja varsinainen Thread
+                    testForHits()
+
+                    println("KONSOLI   : aloita().schedule loppumassa...")
+                }
+
+                RandomTimer.cancel()                         // lopettaa schedule loopin
+                RandomTimer.purge()
+            }
+
+        }, RandomBeepTime.toLong())                                          // jos laittaisit vielä randomSekuLongin perään , x)   -> niin se määrittäisi kaikkien seuraavien viiveen, mutta ne pysyis varmaan samana sit siitä eteenpäin?
+
+
+    }
+
+
+
+    private fun testForHits() {
+
+        // initializing audioRec
+        println("KONSOLI   : initializing AudioRec")                            //  TYÖ  jostain syystä tää tulee 2x
+        audioRec = AudioRecord(MediaRecorder.AudioSource.MIC, sampleRate,
+                AudioFormat.CHANNEL_IN_MONO,
+                AudioFormat.ENCODING_PCM_16BIT, bufferSize)
+
+        audioRec!!.startRecording()
+
+
+        println("KONSOLI   : testForHits.thread alkamassa")
+        thread = Thread(Runnable {
+            while (thread != null && !thread!!.isInterrupted && RoundEnding == false) {             // && and   || or
+                //sleep  for SAMPLE_DELAY tutkimisen välissä
+                try {
+                    Thread.sleep(SAMPLE_DELAY.toLong())
+                } catch (ie: InterruptedException) {
+                    ie.printStackTrace()
+                }
+
+                MaxAmplitudeTest()      //maxAmp testi
+
+                // tallenna ViimeisinMaxAmplitude taulukkoon ja vertaile for loopin jälkeen k
+
+                if (ViimeisinMaxAmplitude > threshold) { ReactionHitDetected() }
+
+                // jos haluat tallentaa jonnekin isoimman Amplituden
+                /*
+                if (ViimeisinMaxAmplitude > maxAmpEver) {
+                    maxAmpEver = ViimeisinMaxAmplitude.toInt()
+                    runOnUiThread { tv_info.text ="max : $maxAmpEver" }
+                }
+                */
+
+
+
+                //TYÖ
+                x = x + 1
+                series.appendData(DataPoint(x,ViimeisinMaxAmplitude), true, 50)
+
+                Yline = thresholdDouble
+                thresholdLineinGraph.appendData(DataPoint(x, Yline), true, 50)
+
+
+                //tämä tarvii olla jottei kaadu heti 50x mittauksen jälkeen...
+                if (x.toInt() % 50 == 1) {
+                    graph.removeAllSeries()
+                    graph.addSeries(series)
+                    graph.addSeries(seriesHITs)
+                    graph.addSeries(thresholdLineinGraph)
+                }
+
+                println("KONSOLI   :   TOTAL THREADS :  ${Thread.activeCount()} ")
+
+                when {
+                    (ViimeisinMaxAmplitude < 10)                                      -> println("KONSOLI   :max amp on 0x   : ${ViimeisinMaxAmplitude.toInt()}  *")
+                    ((ViimeisinMaxAmplitude >=10) && (ViimeisinMaxAmplitude < 20))    -> println("KONSOLI   :max amp on 1x   : ${ViimeisinMaxAmplitude.toInt()}  **")
+                    ((ViimeisinMaxAmplitude >=20) && (ViimeisinMaxAmplitude < 30))    -> println("KONSOLI   :max amp on 2x   : ${ViimeisinMaxAmplitude.toInt()}  ***")
+                    ((ViimeisinMaxAmplitude >=30) && (ViimeisinMaxAmplitude < 40))    -> println("KONSOLI   :max amp on 3x   : ${ViimeisinMaxAmplitude.toInt()}  ****")
+                    ((ViimeisinMaxAmplitude >=40) && (ViimeisinMaxAmplitude < 50))    -> println("KONSOLI   :max amp on 4x   : ${ViimeisinMaxAmplitude.toInt()}  *****")
+                    ((ViimeisinMaxAmplitude >=50) && (ViimeisinMaxAmplitude < 60))    -> println("KONSOLI   :max amp on 5x   : ${ViimeisinMaxAmplitude.toInt()}  ******")
+                    ((ViimeisinMaxAmplitude >=60) && (ViimeisinMaxAmplitude < 70))    -> println("KONSOLI   :max amp on 6x   : ${ViimeisinMaxAmplitude.toInt()}  *******")
+                    ((ViimeisinMaxAmplitude >=70) && (ViimeisinMaxAmplitude < 80))    -> println("KONSOLI   :max amp on 7x   : ${ViimeisinMaxAmplitude.toInt()}  ********")
+                    ((ViimeisinMaxAmplitude >=80) && (ViimeisinMaxAmplitude < 90))    -> println("KONSOLI   :max amp on 8x   : ${ViimeisinMaxAmplitude.toInt()}  *********")
+                    ((ViimeisinMaxAmplitude >=90) && (ViimeisinMaxAmplitude < 100))   -> println("KONSOLI   :max amp on 9x   : ${ViimeisinMaxAmplitude.toInt()}  **********")
+                    ((ViimeisinMaxAmplitude >=100) && (ViimeisinMaxAmplitude < 110))  -> println("KONSOLI   :max amp on 10x  : ${ViimeisinMaxAmplitude.toInt()}  ***********")
+                    ((ViimeisinMaxAmplitude >=110) && (ViimeisinMaxAmplitude < 120))  -> println("KONSOLI   :max amp on 11x  : ${ViimeisinMaxAmplitude.toInt()}  MAXXXXXXXXXXXXX")
+                //ViimeisinMaxAmplitude > 60      -> hitDetected()
+                //ViimeisinMaxAmplitude == 0.0    -> println("KONSOLI   : total:${Thread.activeCount()}  this.ID:${Thread.currentThread().id}  $SAMPLE_DELAY ms,  ${ViimeisinMaxAmplitude.toInt()}   default")
+                    else                            -> println("KONSOLI   :   total:${Thread.activeCount()}  this.ID:${Thread.currentThread().id}  $SAMPLE_DELAY ms,  ${ViimeisinMaxAmplitude.toInt()} -?????")
+                }
+            }
+        })
+
+        thread!!.start()
+
+    }
+
+
+    private fun EndTheRound() {
+        //tähän kaikki lopetus jutut
+        // tallenna score
+        // lopeta beeppaukset jne
+        // mene kokonaan uuteen activityyn scoren tallennuksen jälkeen?
+
+        val BoxingBell_ShortLoudEnd = MediaPlayer.create(applicationContext, R.raw.boxingbellshortloud)
+        BoxingBell_ShortLoudEnd.start()
+
+        RoundEnding = true
+
+        //ei lopeta threadia :(
+        thread!!.interrupt()
+
+        SaveScore()
+
+        // miksei tämä tule näkyviin?   koska ReactionHitDetected pyörähtää vielä kerran
+        //runOnUiThread { tv_Count.text = "Total Count : $count   The Round has ended." }
+
+        println("KONSOLI   :  LOPULLINEN KESKIARVO     ----------------------------------------------")
+        println("KONSOLI   :  LOPULLINEN KESKIARVO     ${arrayReactionResult!!.average().toInt()} ms")
+        println("KONSOLI   :  LOPULLINEN KESKIARVO     ----------------------------------------------")
+    }
+
+
+    //fun SaveScore (view: View) {
+    fun SaveScore () {
+        val ScoreToFile : String = "${arrayReactionResult!!.average().toInt().toString()}\n"
+        try {
+            val fileOutputStream = openFileOutput("score_reaction.txt", Context.MODE_APPEND)    // MODE_APPEND lisää tiedoston perään
+            fileOutputStream.write(ScoreToFile.toByteArray())
+            fileOutputStream.close()
+
+            println("KONSOLI   : score average saved to file $ScoreToFile")
+            runOnUiThread { toast("Your score is saved to YOUR PROGRESS") }
+
+            // throws
+        } catch (e: FileNotFoundException) {
+            e.printStackTrace()
+        } catch (e: IOException) {
+            e.printStackTrace()
+        }
+
+    }
+
+
+    private fun ReactionHitDetected() {
+
+            //println("KONSOLI   : total:${Thread.activeCount()}  this.ID:${Thread.currentThread().id}  $SAMPLE_DELAY ms,  ${ViimeisinMaxAmplitude.toInt()} BING BING !!!!!")
+
+            count = count + 1
+            runOnUiThread { tv_Count.text = "Count  :  $count" }
+            HowLongSinceLastHit = 0
+
+            // näyttää reaktio ajan konsolissa! millisekuntteina
+            ReactionResultTIME = System.currentTimeMillis().toInt() - BeepToHitDetectedTIMEstart
+            println("KONSOLI   :   varsinainen AIKA :    $ReactionResultTIME")
+
+            //tallenna Result arrayhyn
+            arrayReactionResult!!.add(ReactionResultTIME)
+            println("KONSOLI   :  ARRAY             : ${arrayReactionResult!!.size}")
+            println("KONSOLI   :  ARRAY   keskiarvo : ${arrayReactionResult!!.average().toInt()}")
+
+            //lisää rivi riviltä päälle viimeisimmän ajan.  tarviiko tätä enää
+            runOnUiThread { tvHistory.text = "$ReactionResultTIME \n ${tvHistory.text}" }
+
+            //jottei HIT punainen pallo mene chartista yli...
+            if (ViimeisinMaxAmplitude > 200) {
+                seriesHITs.appendData(DataPoint(x, 200.0), true, 50)
+            } else {
+                seriesHITs.appendData(DataPoint(x, ViimeisinMaxAmplitude), true, 50)
+            }
+
+
+            //lisää datan Reaction seriekseen eli alempaan graafiin
+            seriesReaction.appendData(DataPoint(xReaction, ReactionResultTIME.toDouble()), true, 50)
+
+            //tämä tarvii olla jottei kaadu heti 50x mittauksen jälkeen... vai 25x?
+            if (xReaction.toInt() % 50 == 1) {
+                historyGraph.removeAllSeries()
+                //piirtää käppyrän
+                historyGraph.addSeries(seriesReaction)
+            } else { historyGraph.addSeries(seriesReaction) }
+
+            xReaction = xReaction + 1
+
+
+            //aloita uudestaan reaktio looppi
+            //pitäskö tässä lopettaa AudioRec? ja myös threadit?
+
+                if (audioRec != null) {
+                    audioRec!!.stop()
+                    audioRec!!.release()
+                    audioRec = null
+                }
+
+                // mitä tää tekee?!
+                thread!!.interrupt()
+
+
+            aloita()
+
+
     }
 
 
     // MAX AMPLITUDE tai äänen kovuus testi
-    private fun MaxAmplitudeTest() {
+    private fun MaxAmplitudeTestBackUp() {
 
         try {
-            val buffer = ShortArray(bufferSize)
+            val buffer = ShortArray(bufferSize)         // short minimum -32,768 and a maximum 32,767
 
             var bufferReadResult = 1
 
             if (audioRec != null) {
 
                 // Sense the voice...
-                bufferReadResult = audioRec!!.read(buffer, 0, bufferSize)
+                bufferReadResult = audioRec!!.read(buffer, 0, bufferSize)           // bufferReadResult = 640 eli sama kuin bufferSize
+                println("bKONSOLI   :  BufferReadResult : $bufferReadResult / $bufferSize")
                 var sumLevel = 0.0
+
+                //TYÖ miksi toDouble? miksei short kävisi?
+                //sumLeveliin lisätään jokainen buffer arrayn arvo 0...640 (bufferReadResult)
                 for (i in 0..bufferReadResult - 1) {
-                    sumLevel += buffer[i].toDouble()
+                    println("cKONSOLI   : $i buffer : ${Math.abs(buffer[i].toInt())}")      //tämä ei näytä ainakaan miinuksia
+                    sumLevel += buffer[i].toDouble()    //tämähän plussaa nyt myös miinus äänet!
                 }
-                ViimeisinMaxAmplitude = Math.abs(sumLevel / bufferReadResult)
+                ViimeisinMaxAmplitude = Math.abs(sumLevel / bufferReadResult)   // abs = absolute value, eli ei negatiivisia
+                println("KONSOLI   : MaxAMP  :  ${ViimeisinMaxAmplitude.toInt()}")
             }
 
         } catch (e: Exception) {
@@ -146,33 +783,70 @@ class ReactionActivity : AppCompatActivity() {
     }
 
 
+
+    // MAX AMPLITUDE tai äänen kovuus testi
+    private fun MaxAmplitudeTest() {
+
+        try {
+            val buffer = ShortArray(bufferSize)         // short minimum -32,768 and a maximum 32,767
+
+            var bufferReadResult = 1
+
+            if (audioRec != null) {
+
+                // Sense the voice...
+                bufferReadResult = audioRec!!.read(buffer, 0, bufferSize)           // bufferReadResult = 640 eli sama kuin bufferSize
+                //println("bKONSOLI   :  BufferReadResult : $bufferReadResult / $bufferSize")
+                var sumLevel = 0.0
+
+                //TYÖ miksi toDouble? miksei short kävisi?
+                //sumLeveliin lisätään jokainen buffer arrayn arvo 0...640 (bufferReadResult)
+                for (i in 0..bufferReadResult - 1) {
+                    //println("cKONSOLI   : $i buffer : ${Math.abs(buffer[i].toInt())}")      //tämä ei näytä ainakaan miinuksia
+                    sumLevel += buffer[i].toDouble()    //tämähän plussaa nyt myös miinus äänet!
+                }
+
+                ViimeisinMaxAmplitude = buffer.max()!!.toDouble()
+                println("KONSOLI   : MaxAMP  :  ${ViimeisinMaxAmplitude.toInt()}")
+            }
+
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
+
+    }
+
+    // menee on pauseen myös jos laitetta kääntää!
     override fun onPause() {
         super.onPause()
-        thread!!.interrupt()
-        thread = null
-        try {
-            if (audioRec != null) {
-                audioRec!!.stop()
-                audioRec!!.release()
-                audioRec = null
+        println("KONSOLI   : onPause ...")
+        if (thread != null) {
+            thread!!.interrupt()
+            thread = null
+            try {
+                if (audioRec != null) {
+                    audioRec!!.stop()
+                    audioRec!!.release()
+                    audioRec = null
+                }
+            } catch (e: Exception) {
+                e.printStackTrace()
             }
-        } catch (e: Exception) {
-            e.printStackTrace()
         }
+
 
     }
 
 
-    //työ voiko tän vaan poistaa? mikä tää REQUEST_RECORC_PERM...  ??
     //An object declaration inside a class can be marked with the companion keyword
     companion object {
 
         private var sampleRate = 8000
-        private val SAMPLE_DELAY = 75
+        private val SAMPLE_DELAY = 1
 
-        private val LOG_TAG = "AudioRecordTest"
+        //private val LOG_TAG = "AudioRecordTest"
         val REQUEST_RECORD_AUDIO_PERMISSION = 200
-        private var mFileName: String? = null
+        //private var mFileName: String? = null
 
 
     }

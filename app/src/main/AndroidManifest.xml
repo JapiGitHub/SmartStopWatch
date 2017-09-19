@@ -40,6 +40,8 @@
         </activity>
         <activity android:name=".StopWatchActivity">
         </activity>
+        <activity android:name=".RoundTimerActivity">
+        </activity>
     </application>
 
 </manifest>
