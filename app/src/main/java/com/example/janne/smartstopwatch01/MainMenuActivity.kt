@@ -70,6 +70,7 @@ class MainMenuActivity : AppCompatActivity() {
 
 
         //buttons
+
         buttReaction.onClick                { startActivity(Intent(this@MainMenuActivity,ReactionActivity::class.java)) }
         buttReactionHistory.onClick         { startActivity(Intent(this@MainMenuActivity,ReactionHistoryActivity::class.java)) }
         buttCountREPs.onClick               { startActivity(Intent(this@MainMenuActivity,CounterActivity::class.java)) }

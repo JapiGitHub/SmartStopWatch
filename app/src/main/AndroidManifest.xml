@@ -24,7 +24,9 @@
         </activity>
         <activity android:name=".ReactionActivity">
         </activity>
-        <activity android:name=".CounterActivity">
+        <activity android:name=".CounterActivity"
+                  android:screenOrientation="sensorPortrait"
+                  android:configChanges="keyboardHidden|orientation|screenSize">
         </activity>
         <activity android:name=".SettingsActivity">
         </activity>
@@ -41,6 +43,8 @@
         <activity android:name=".StopWatchActivity">
         </activity>
         <activity android:name=".RoundTimerActivity">
+        </activity>
+        <activity android:name=".ReactionEndingActivity">
         </activity>
     </application>
 

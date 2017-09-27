@@ -2,6 +2,8 @@ package com.example.janne.smartstopwatch01
 
 import android.Manifest
 import android.content.Context
+import android.content.Intent
+import android.content.pm.ActivityInfo
 import android.content.pm.PackageManager
 import android.graphics.Color
 import android.media.AudioFormat
@@ -12,14 +14,18 @@ import android.os.Bundle
 import android.os.CountDownTimer
 import android.support.v4.app.ActivityCompat
 import android.support.v7.app.AppCompatActivity
+import android.view.View
 import android.view.Window
 import android.view.WindowManager
+import android.widget.EditText
+import android.widget.NumberPicker
 import android.widget.SeekBar
+import android.widget.TextView
 import com.jjoe64.graphview.GraphView
 import com.jjoe64.graphview.series.DataPoint
 import com.jjoe64.graphview.series.LineGraphSeries
 import com.jjoe64.graphview.series.PointsGraphSeries
-import kotlinx.android.synthetic.main.activity_reaction.*
+import kotlinx.android.synthetic.main.activity_reaction_v2.*
 import org.jetbrains.anko.longToast
 import org.jetbrains.anko.sdk25.coroutines.onClick
 import org.jetbrains.anko.toast
@@ -44,9 +50,7 @@ class ReactionActivity : AppCompatActivity() {
     //private var hasRoundStarted : Boolean = false
     private var RoundEnding : Boolean = false
 
-    private var maxAmpEver = 0
-
-    private var threshold = 60
+    private var threshold = 20000
     var thresholdDouble : Double = threshold.toDouble()
     //private var thresholdStrIntDUMP : String = "61"
 
@@ -61,7 +65,9 @@ class ReactionActivity : AppCompatActivity() {
     var xReaction : Double = 0.0
 
 
+    private var RoundStartsIn = 3000
     private var RoundLength : Int = 2
+    private var RoundLengthMillis : Long = 0
     private var hours = 0
     private var minutes = 0
     private var seconds = 0
@@ -70,10 +76,11 @@ class ReactionActivity : AppCompatActivity() {
     private var RoundHasStarted : Boolean = false
 
     //seekbars
-    lateinit var sb_Threshold : SeekBar
-    lateinit var sb_RandomMin : SeekBar
-    lateinit var sb_RandomMax : SeekBar
-    lateinit var sb_RoundLength : SeekBar
+    lateinit var sbThreshold: SeekBar
+
+    lateinit var NP_Minutes : NumberPicker
+    lateinit var NP_Hours : NumberPicker
+    lateinit var NP_Seconds : NumberPicker
 
     //random
     var satunnaisGeneraattori = Random()
@@ -86,7 +93,8 @@ class ReactionActivity : AppCompatActivity() {
 
     var BeepToHitDetectedTIMEstart = 0
     var ReactionResultTIME = 0
-    var arrayReactionResult : MutableList<Int>? = mutableListOf(1)
+    //var arrayReactionResult : MutableList<Int>? = mutableListOf(1)
+    private var arrayReactionResult = mutableListOf<Int>()
 
 
     //          PERMISSIONS                         ------------------------------------------
@@ -110,6 +118,7 @@ class ReactionActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
 
         println("KONSOLI   :  OnCreate alkaa ------------------------------------------------------------ ")
+
         //permissions
         ActivityCompat.requestPermissions(this, permissions, REQUEST_RECORD_AUDIO_PERMISSION)
 
@@ -117,11 +126,12 @@ class ReactionActivity : AppCompatActivity() {
         requestWindowFeature(Window.FEATURE_NO_TITLE)
         window.setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN,
                 WindowManager.LayoutParams.FLAG_FULLSCREEN)
-        setContentView(R.layout.activity_reaction)
-        supportActionBar!!.hide()
+        setContentView(R.layout.activity_reaction_v2)
+        //supportActionBar!!.hide()
 
-        //luultavasti turha. tää vaan "nollaa" arrayReactionResult mutableListan, en kato osannut muuten initializoida sitä kun antamalla sinne arvon 1 indeksiin[0]
-        arrayReactionResult!!.removeAt(0)
+        // pitää portraittina!
+        setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
+
 
         //buffersize determination
         for (rate in intArrayOf(44100, 22050, 11025, 16000, 8000)) {  // add the rates you wish to check against
@@ -135,59 +145,32 @@ class ReactionActivity : AppCompatActivity() {
 
 
         // SEEKBARit
-        sb_RandomMin = findViewById(R.id.sb_RandomMin) as SeekBar
-        sb_RandomMin.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener{
+        sbThreshold = findViewById(R.id.sb_Threshold) as SeekBar
+        sbThreshold.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
             override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {
-                tv_RandomMinSlider.text = "${sb_RandomMin.progress}"
-                RandomMin = sb_RandomMin.progress * 1000
-            }
-            override fun onStartTrackingTouch(seekBar: SeekBar?) {}
-            override fun onStopTrackingTouch(seekBar: SeekBar?) {}
-        })
 
-        sb_RandomMax = findViewById(R.id.sb_RandomMax) as SeekBar
-        sb_RandomMax.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener{
-            override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {
-                tv_RandomMaxSlider.text = "${sb_RandomMax.progress}"
-                RandomMax = sb_RandomMax.progress * 1000
-            }
-            override fun onStartTrackingTouch(seekBar: SeekBar?) {}
-            override fun onStopTrackingTouch(seekBar: SeekBar?) {}
-        })
-
-        sb_Threshold = findViewById(R.id.sb_Threshold) as SeekBar
-        sb_Threshold.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
-            override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {
-                threshold = sb_Threshold.progress
+                threshold = sbThreshold.progress
                 thresholdDouble = threshold.toDouble()
-                tv_ThresholdSlider.text = "${sb_Threshold.progress}"
                 println("KONSOLI   :  threshold set to : $threshold")
 
             }
             override fun onStartTrackingTouch(seekBar: SeekBar?) {}
-            override fun onStopTrackingTouch(seekBar: SeekBar?) {}
+            override fun onStopTrackingTouch(seekBar: SeekBar?) {
+                if (count == 0) {  runOnUiThread { toast("Good, now push START")  }  }
+            }
         })
 
-        sb_RoundLength = findViewById(R.id.sb_RoundLength) as SeekBar
-        sb_RoundLength.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener{
-            override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {
-                RoundLength = sb_RoundLength.progress
-                tv_RoundLength.text = "${sb_RoundLength.progress}"
-                println("KONSOLI   : round length   : $RoundLength")
-            }
-            override fun onStartTrackingTouch(seekBar: SeekBar?) {}
-            override fun onStopTrackingTouch(seekBar: SeekBar?) {}
-        })
+
 
 
         // NAPIT
-        buttReactionCalibration.onClick        { resetProgress() }
-        buttReactionStart.onClick              { aloita() }
+        btn_ResetReaction.onClick        { resetProgress() }
+        btn_StartReaction.onClick              { aloita() }
 
 
         // GRAPHit  <
         var graphview : GraphView = findViewById(R.id.graph) as GraphView
-        var HistoryGraph : GraphView = findViewById(R.id.historyGraph) as GraphView
+        //var HistoryGraph : GraphView = findViewById(R.id.historyGraph) as GraphView
 
         //ääni graafit
             series = LineGraphSeries<DataPoint>()
@@ -201,6 +184,17 @@ class ReactionActivity : AppCompatActivity() {
             seriesHITs.size = 60f
 
             series.thickness = 15
+
+            series.color = Color.TRANSPARENT
+            series.isDrawBackground = true
+            val Bluish = Color.argb(200, 115, 173, 197)
+            series.backgroundColor = Bluish
+
+
+            //threshold line
+            val Greenish = Color.argb(200,21,123,21)
+            thresholdLineinGraph.color = Greenish
+            thresholdLineinGraph.thickness = 10
 
             graph.gridLabelRenderer.isVerticalLabelsVisible = false
             graph.gridLabelRenderer.isHorizontalLabelsVisible = false
@@ -222,14 +216,15 @@ class ReactionActivity : AppCompatActivity() {
 
             //reaktio graafi
             seriesReaction = LineGraphSeries<DataPoint>()
-            HistoryGraph.getViewport().setScrollable(true)
+
+/*            HistoryGraph.getViewport().setScrollable(true)
             HistoryGraph.getViewport().setXAxisBoundsManual(true)
             HistoryGraph.getViewport().setYAxisBoundsManual(true)
             HistoryGraph.getViewport().setMaxX(50.0)
             HistoryGraph.getViewport().setMinX(0.0)
             HistoryGraph.getViewport().setMaxY(3000.0)
             HistoryGraph.getViewport().setMinY(0.0)
-            HistoryGraph.gridLabelRenderer.isHorizontalLabelsVisible = false
+            HistoryGraph.gridLabelRenderer.isHorizontalLabelsVisible = false*/
 
         /*
         for (i in 0..400)
@@ -255,7 +250,8 @@ class ReactionActivity : AppCompatActivity() {
         println("KONSOLI   : Calibration Thread alkamassa")
         CalibrationThread = Thread(Runnable {
             while (CalibrationThread != null && !CalibrationThread!!.isInterrupted && CalibrationInProgress == true) {
-                //sleep  for SAMPLE_DELAY tutkimisen välissä
+
+               //sleep  for SAMPLE_DELAY tutkimisen välissä
                 try {
                     Thread.sleep(SAMPLE_DELAY.toLong())
                 } catch (ie: InterruptedException) {
@@ -264,24 +260,32 @@ class ReactionActivity : AppCompatActivity() {
 
                 MaxAmplitudeTest()      //maxAmp testi
 
-                x = x + 1
-                series.appendData(DataPoint(x,ViimeisinMaxAmplitude), true, 50)
-
-                Yline = thresholdDouble
-                thresholdLineinGraph.appendData(DataPoint(x, Yline), true, 50)
 
 
-                //tämä tarvii olla jottei kaadu heti 50x mittauksen jälkeen...
-                if (x.toInt() % 50 == 1) {
-                    graph.removeAllSeries()
-                    graph.addSeries(series)
-                    graph.addSeries(seriesHITs)
-                    graph.addSeries(thresholdLineinGraph)
+                //pakko olla runonUIthread, muuten tulee  ConcurrentModificationException
+                runOnUiThread {
+
+                    x = x + 1
+
+                    series.appendData(DataPoint(x, ViimeisinMaxAmplitude), true, 50)
+
+                    Yline = thresholdDouble
+                    thresholdLineinGraph.appendData(DataPoint(x, Yline), true, 50)
+
+
+                    //tämä tarvii olla jottei kaadu heti 50x mittauksen jälkeen...
+
+                        graph.removeAllSeries()
+                        graph.addSeries(series)
+                        graph.addSeries(seriesHITs)
+                        graph.addSeries(thresholdLineinGraph)
+
                 }
-
-                println("KONSOLI   :   TOTAL THREADS :  ${Thread.activeCount()} ")
+                //println("KONSOLI   :   TOTAL THREADS :  ${Thread.activeCount()} ")
 
             }})
+
+        runOnUiThread { longToast("Set THRESHOLD and push START" )}
 
                 CalibrationThread!!.start()
     }
@@ -338,8 +342,6 @@ class ReactionActivity : AppCompatActivity() {
             ReactionResultTIME = BeepToHitDetectedTIMEstart - System.currentTimeMillis().toInt()
             println("KONSOLI   :   varsinainen AIKA :    $ReactionResultTIME")
 
-            runOnUiThread { tvHistory.text = "${ViimeisinMaxAmplitude.toInt()} \n ${tvHistory.text}" }
-
             //jottei HIT punainen pallo mene chartista yli...
             if (ViimeisinMaxAmplitude > 200) {
                 seriesHITs.appendData(DataPoint(x, 200.0), true, 50)
@@ -367,12 +369,10 @@ class ReactionActivity : AppCompatActivity() {
 
         count = 0
 
-        runOnUiThread { tv_info.text = "" }
-
         CalibrationInProgress = false
 
         seriesHITs = seriesHardReset
-        historyGraph.removeAllSeries()
+        //historyGraph.removeAllSeries()
 
         arrayReactionResult!!.clear()
 
@@ -474,31 +474,62 @@ class ReactionActivity : AppCompatActivity() {
 
     private fun aloita() {
 
+        RandomMin = et_Random_Min.text.toString().toInt() * 1000
+        RandomMax = et_Random_Max.text.toString().toInt() * 1000
+        RoundStartsIn = et_RoundStartsInSeconds.text.toString().toInt() * 1000
+
+        //poistaa näkyvistä turhat asetukset erän ajaksi
+        et_Random_Min.visibility = View.GONE
+        et_Random_Max.visibility = View.GONE
+        tv_info1.visibility = View.GONE
+        tv_info2.visibility = View.GONE
+        //tv_info3.visibility = View.GONE
+        et_RoundStartsInSeconds.visibility = View.GONE
+
+
+        //ota NumberPickereistä aika millisekunneiksi
+        RoundLengthMillis = (et_Hours_Reaction.text.toString().toLong() * 60 * 60 * 1000) + (et_Minutes_reaction.text.toString().toLong() * 1000 * 60) + (et_Seconds_Reaction.text.toString().toLong() * 1000)
+        println("KONSOLI   : ROUNDLENGHT MILLIS : $RoundLengthMillis")
+
+
         //laittaa Round timerin päälle if count == 0
-
         if (count == 0) {
-            runOnUiThread {
-                object : CountDownTimer(RoundLength.toLong() * 60 * 1000, 10) {
-                    override fun onTick(millisUntilFinished: Long) {
+            runOnUiThread { tv_info3.text = "Wait for BEEP and be fast" }
 
-                        aikaTekstiksi = millisUntilFinished
-                        millis = (aikaTekstiksi.toInt() % 1000)
-                        seconds = (aikaTekstiksi.toInt() / 1000) % 60
-                        minutes = (aikaTekstiksi.toInt() / 60000) % 60
-                        hours = (aikaTekstiksi.toInt() / 3600000) % 60
-                        tv_info.text = "$hours : $minutes : $seconds : $millis"
+            //jotta saadaan erän alkuun 5 sec
+            var StartUpTimerReaction = Timer()
+
+
+            //schedule warmup 5 sec
+            StartUpTimerReaction.schedule(object : TimerTask() {
+                override fun run() {
+                    runOnUiThread {
+                        object : CountDownTimer(RoundLengthMillis, 10) {
+                            override fun onTick(millisUntilFinished: Long) {
+
+                                aikaTekstiksi = millisUntilFinished
+                                millis = (aikaTekstiksi.toInt() % 1000)
+                                seconds = (aikaTekstiksi.toInt() / 1000) % 60
+                                minutes = (aikaTekstiksi.toInt() / 60000) % 60
+                                hours = (aikaTekstiksi.toInt() / 3600000) % 60
+                                //tv_Count.text = "$hours : $minutes : $seconds : $millis"
+                                et_Hours_Reaction.setText(hours.toString(),TextView.BufferType.EDITABLE)
+                                et_Minutes_reaction.setText(minutes.toString(),TextView.BufferType.EDITABLE)
+                                et_Seconds_Reaction.setText(seconds.toString(),TextView.BufferType.EDITABLE)
+                                et_Millis_Reaction.setText(millis.toString(), TextView.BufferType.EDITABLE)
+                            }
+
+                            override fun onFinish() {
+                                //tv_info.text = "ROUND END"
+                                val BoxingBell_ShortLoudEnd = MediaPlayer.create(applicationContext, R.raw.boxingbellshortloud)
+                                BoxingBell_ShortLoudEnd.start()
+                                RoundHasStarted = false
+                                EndTheRound()
+                            }
+
+                        }.start()
                     }
-
-                    override fun onFinish() {
-                        tv_info.text = "ROUND END"
-                        val BoxingBell_ShortLoudEnd = MediaPlayer.create(applicationContext, R.raw.boxingbellshortloud)
-                        BoxingBell_ShortLoudEnd.start()
-                        RoundHasStarted = false
-                        EndTheRound()
-                    }
-
-                }.start()
-            }
+                }}, RoundStartsIn.toLong())
         }
 
 
@@ -516,14 +547,14 @@ class ReactionActivity : AppCompatActivity() {
 
         // RANDOM
         var RandomTimer = Timer()       // tämä on siis vain schedulea varten ei ole itsessään random. Satunnaisgeneraattori on se varsinainen random
-        var RandomBeepTime = satunnaisGeneraattori.nextInt(RandomMax) + RandomMin
+        var RandomBeepTime = satunnaisGeneraattori.nextInt(RandomMax-RandomMin) + RandomMin
         println("KONSOLI   : randomBeep() $RandomBeepTime")
 
         //jos eka kierros lähtee pyörimään
         if (count == 0) {
-            RandomBeepTime = RandomBeepTime + 3000                          // lisää 3 sekunttia EKAAN randomiin
-            //runOnUiThread { toast("STARTING! in 3 sec!") }
-            runOnUiThread { longToast("Starting in 3 sec!") }               // normaalia pidempi aikainen Toast()
+            RandomBeepTime = RandomBeepTime + RoundStartsIn                         // lisää 3 sekunttia EKAAN randomiin
+            runOnUiThread { toast("STARTING! in ${RoundStartsIn / 1000} sec!") }
+            runOnUiThread { tv_info3.text = "Round starts in ${RoundStartsIn / 1000} seconds, wait for it..." }
         }
 
 
@@ -540,6 +571,11 @@ class ReactionActivity : AppCompatActivity() {
                     //Random start beeppaus
                     val BeepSound = MediaPlayer.create(applicationContext, R.raw.beep)
                     BeepSound.start()
+
+                    runOnUiThread {
+                        tv_info3.text = "GO GO GO !"
+                        tv_Wait.visibility = View.GONE
+                    }
 
                     //aloita ajan mittaus ( ReactionHitDetected() saakka )
                     BeepToHitDetectedTIMEstart = System.currentTimeMillis().toInt()
@@ -667,8 +703,22 @@ class ReactionActivity : AppCompatActivity() {
         println("KONSOLI   :  LOPULLINEN KESKIARVO     ----------------------------------------------")
         println("KONSOLI   :  LOPULLINEN KESKIARVO     ${arrayReactionResult!!.average().toInt()} ms")
         println("KONSOLI   :  LOPULLINEN KESKIARVO     ----------------------------------------------")
+
+        //menee Ending Activityyn ja intentillä siirtää tarvittavat datat sinne
+        EndingActivityIntent()
+
     }
 
+    fun EndingActivityIntent() {
+        val intentSender = Intent(this, ReactionEndingActivity::class.java)
+        val intentCount = count.toString()
+        val intentReactionAverage = arrayReactionResult!!.average().toString()
+        val intentScoreArray = arrayReactionResult
+        intentSender.putExtra(EXTRA_INTENT_COUNT, intentCount)
+        intentSender.putExtra(EXTRA_INTENT_REACTION_AVERAGE, intentReactionAverage)
+        intentSender.putExtra(EXTRA_INTENT_SCORE_ARRAY, intentScoreArray!!.toIntArray())
+        startActivity(intentSender)
+    }
 
     //fun SaveScore (view: View) {
     fun SaveScore () {
@@ -695,6 +745,11 @@ class ReactionActivity : AppCompatActivity() {
 
             //println("KONSOLI   : total:${Thread.activeCount()}  this.ID:${Thread.currentThread().id}  $SAMPLE_DELAY ms,  ${ViimeisinMaxAmplitude.toInt()} BING BING !!!!!")
 
+            runOnUiThread {
+                tv_info3.text = "That's a hit, wait for the next BEEP. Your Reaction was $ReactionResultTIME ms"
+                tv_Wait.visibility = View.VISIBLE
+            }
+
             count = count + 1
             runOnUiThread { tv_Count.text = "Count  :  $count" }
             HowLongSinceLastHit = 0
@@ -709,7 +764,7 @@ class ReactionActivity : AppCompatActivity() {
             println("KONSOLI   :  ARRAY   keskiarvo : ${arrayReactionResult!!.average().toInt()}")
 
             //lisää rivi riviltä päälle viimeisimmän ajan.  tarviiko tätä enää
-            runOnUiThread { tvHistory.text = "$ReactionResultTIME \n ${tvHistory.text}" }
+            //runOnUiThread { tvHistory.text = "$ReactionResultTIME \n ${tvHistory.text}" }
 
             //jottei HIT punainen pallo mene chartista yli...
             if (ViimeisinMaxAmplitude > 200) {
@@ -724,10 +779,10 @@ class ReactionActivity : AppCompatActivity() {
 
             //tämä tarvii olla jottei kaadu heti 50x mittauksen jälkeen... vai 25x?
             if (xReaction.toInt() % 50 == 1) {
-                historyGraph.removeAllSeries()
+                //historyGraph.removeAllSeries()
                 //piirtää käppyrän
-                historyGraph.addSeries(seriesReaction)
-            } else { historyGraph.addSeries(seriesReaction) }
+                //historyGraph.addSeries(seriesReaction)
+            } //else { historyGraph.addSeries(seriesReaction) }
 
             xReaction = xReaction + 1
 
@@ -752,6 +807,7 @@ class ReactionActivity : AppCompatActivity() {
 
 
     // MAX AMPLITUDE tai äänen kovuus testi
+/*
     private fun MaxAmplitudeTestBackUp() {
 
         try {
@@ -781,6 +837,7 @@ class ReactionActivity : AppCompatActivity() {
         }
 
     }
+*/
 
 
 
@@ -807,7 +864,7 @@ class ReactionActivity : AppCompatActivity() {
                 }
 
                 ViimeisinMaxAmplitude = buffer.max()!!.toDouble()
-                println("KONSOLI   : MaxAMP  :  ${ViimeisinMaxAmplitude.toInt()}")
+                //println("KONSOLI   : MaxAMP  :  ${ViimeisinMaxAmplitude.toInt()}")
             }
 
         } catch (e: Exception) {
@@ -842,13 +899,17 @@ class ReactionActivity : AppCompatActivity() {
     companion object {
 
         private var sampleRate = 8000
-        private val SAMPLE_DELAY = 1
+        private val SAMPLE_DELAY = 20
 
         //private val LOG_TAG = "AudioRecordTest"
         val REQUEST_RECORD_AUDIO_PERMISSION = 200
         //private var mFileName: String? = null
 
 
+        //INTENT ja endingActivity
+        val EXTRA_INTENT_COUNT =         "com.example.janne.smartstopwatch01.MESSAGE"
+        val EXTRA_INTENT_REACTION_AVERAGE  =   "com.example.janne.smartstopwatch01.MESSAGE2"
+        val EXTRA_INTENT_SCORE_ARRAY = "com.example.janne.smartstopwatch01.MESSAGE3"
     }
 
 
