@@ -1,6 +1,7 @@
 package com.example.janne.smartstopwatch01
 
 import android.Manifest
+import android.app.Activity
 import android.content.Context
 import android.content.Intent
 import android.content.pm.ActivityInfo
@@ -14,10 +15,11 @@ import android.os.Bundle
 import android.os.CountDownTimer
 import android.support.v4.app.ActivityCompat
 import android.support.v7.app.AppCompatActivity
+import android.view.Gravity
 import android.view.View
 import android.view.Window
 import android.view.WindowManager
-import android.widget.EditText
+import android.view.inputmethod.InputMethodManager
 import android.widget.NumberPicker
 import android.widget.SeekBar
 import android.widget.TextView
@@ -26,8 +28,11 @@ import com.jjoe64.graphview.series.DataPoint
 import com.jjoe64.graphview.series.LineGraphSeries
 import com.jjoe64.graphview.series.PointsGraphSeries
 import kotlinx.android.synthetic.main.activity_reaction_v2.*
+import me.toptas.fancyshowcase.FancyShowCaseView
 import org.jetbrains.anko.longToast
 import org.jetbrains.anko.sdk25.coroutines.onClick
+import org.jetbrains.anko.sdk25.coroutines.onFocusChange
+import org.jetbrains.anko.sdk25.coroutines.onTouch
 import org.jetbrains.anko.toast
 import java.io.FileNotFoundException
 import java.io.IOException
@@ -50,19 +55,19 @@ class ReactionActivity : AppCompatActivity() {
     //private var hasRoundStarted : Boolean = false
     private var RoundEnding : Boolean = false
 
-    private var threshold = 20000
-    var thresholdDouble : Double = threshold.toDouble()
+    private var threshold = 17000
+    private var thresholdDouble : Double = threshold.toDouble()
     //private var thresholdStrIntDUMP : String = "61"
 
     //graph
-    lateinit var series: LineGraphSeries<DataPoint>
-    lateinit var seriesHITs: PointsGraphSeries<DataPoint>
-    lateinit var thresholdLineinGraph : LineGraphSeries<DataPoint>
-    lateinit var seriesReaction: LineGraphSeries<DataPoint>
-    lateinit var seriesHardReset: PointsGraphSeries<DataPoint>
-    var Yline : Double = 0.0
-    var x : Double = 0.0
-    var xReaction : Double = 0.0
+    lateinit private var series: LineGraphSeries<DataPoint>
+    lateinit private var seriesHITs: PointsGraphSeries<DataPoint>
+    lateinit private var thresholdLineinGraph : LineGraphSeries<DataPoint>
+    lateinit private var seriesReaction: LineGraphSeries<DataPoint>
+    lateinit private var seriesHardReset: PointsGraphSeries<DataPoint>
+    private var Yline : Double = 0.0
+    private var x : Double = 0.0
+    private var xReaction : Double = 0.0
 
 
     private var RoundStartsIn = 3000
@@ -83,7 +88,7 @@ class ReactionActivity : AppCompatActivity() {
     lateinit var NP_Seconds : NumberPicker
 
     //random
-    var satunnaisGeneraattori = Random()
+    private var satunnaisGeneraattori = Random()
     private var RandomMin : Int = 1000
     private var RandomMax : Int = 5000
     //var randomSeku = satunnaisGeneraattori.nextInt(RandomMax) + RandomMin              //1000 ... 5000 random   1 ... 5 sekunttia
@@ -91,8 +96,8 @@ class ReactionActivity : AppCompatActivity() {
 
     //var sekunttiKellottaja = Timer()
 
-    var BeepToHitDetectedTIMEstart = 0
-    var ReactionResultTIME = 0
+    private var BeepToHitDetectedTIMEstart = 0
+    private var ReactionResultTIME = 0
     //var arrayReactionResult : MutableList<Int>? = mutableListOf(1)
     private var arrayReactionResult = mutableListOf<Int>()
 
@@ -127,11 +132,12 @@ class ReactionActivity : AppCompatActivity() {
         window.setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN,
                 WindowManager.LayoutParams.FLAG_FULLSCREEN)
         setContentView(R.layout.activity_reaction_v2)
-        //supportActionBar!!.hide()
+        supportActionBar!!.hide()
 
         // pitää portraittina!
-        setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
+        setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT)
 
+        findViewById(R.id.MainLinearLayout).requestFocus()
 
         //buffersize determination
         for (rate in intArrayOf(44100, 22050, 11025, 16000, 8000)) {  // add the rates you wish to check against
@@ -161,8 +167,6 @@ class ReactionActivity : AppCompatActivity() {
         })
 
 
-
-
         // NAPIT
         btn_ResetReaction.onClick        { resetProgress() }
         btn_StartReaction.onClick              { aloita() }
@@ -180,21 +184,21 @@ class ReactionActivity : AppCompatActivity() {
 
             seriesHardReset.color = Color.RED
             seriesHITs.color = Color.RED
-            seriesHardReset.size = 60f
-            seriesHITs.size = 60f
+            seriesHardReset.size = 50f
+            seriesHITs.size = 50f
 
-            series.thickness = 15
+            series.thickness = 2
 
             series.color = Color.TRANSPARENT
             series.isDrawBackground = true
-            val Bluish = Color.argb(200, 115, 173, 197)
-            series.backgroundColor = Bluish
+            val graphColorBluish = Color.argb(200, 161, 161, 147)
+            series.backgroundColor = graphColorBluish
 
 
-            //threshold line
-            val Greenish = Color.argb(200,21,123,21)
-            thresholdLineinGraph.color = Greenish
-            thresholdLineinGraph.thickness = 10
+            //threshold line   #a1a193      btw. se tummempi väri on #5b605f
+            val ThresholdColorOrange = Color.argb(200,255,102,0)
+            thresholdLineinGraph.color = ThresholdColorOrange
+            thresholdLineinGraph.thickness = 7
 
             graph.gridLabelRenderer.isVerticalLabelsVisible = false
             graph.gridLabelRenderer.isHorizontalLabelsVisible = false
@@ -268,7 +272,7 @@ class ReactionActivity : AppCompatActivity() {
                     x = x + 1
 
                     series.appendData(DataPoint(x, ViimeisinMaxAmplitude), true, 50)
-
+println("KONSOLI   : viimeisin max AMP   :   $ViimeisinMaxAmplitude")
                     Yline = thresholdDouble
                     thresholdLineinGraph.appendData(DataPoint(x, Yline), true, 50)
 
@@ -280,16 +284,47 @@ class ReactionActivity : AppCompatActivity() {
                         graph.addSeries(seriesHITs)
                         graph.addSeries(thresholdLineinGraph)
 
+/*                        if (x.toInt() % 100 == 1) {
+                            println("KONSOLI   : ressetDATA")
+                            println("KONSOLI   : ressetDATA")
+
+                            series.resetData(arrayOf(DataPoint(x, 1.0)))
+                            thresholdLineinGraph.resetData(arrayOf(DataPoint(x,thresholdDouble)))
+
+                        }*/
+
+
+
+
+
+
+
+
                 }
                 //println("KONSOLI   :   TOTAL THREADS :  ${Thread.activeCount()} ")
 
             }})
 
-        runOnUiThread { longToast("Set THRESHOLD and push START" )}
+        //runOnUiThread { longToast("Set THRESHOLD and push START" )}
 
                 CalibrationThread!!.start()
-    }
 
+       FancyShowCaseView.Builder(this)
+                .focusOn(sb_Threshold)
+                .title("App makes a BEEP and then starts counting your reaction time. \n \n Just set sound threshold so app knows how loud sounds count for!")
+                .titleStyle(R.style.fancyshowcasestyle, Gravity.TOP or Gravity.CENTER)
+                //.showOnce("fancy1")
+                .build()
+                .show()
+
+        /*FancyShowCaseView.Builder(this)
+                .focusOn(sb_Threshold)
+                .title("set Threhold and push start")
+                .showOnce("fancy1")
+                .build()
+                .show()*/
+
+    }
 
 
 
@@ -332,7 +367,7 @@ class ReactionActivity : AppCompatActivity() {
     }
 
 
-    private fun hitDetected() {
+/*    private fun hitDetected() {
         if (HowLongSinceLastHit > WaitBeforeStartCountingAgain) {
             //println("KONSOLI   : total:${Thread.activeCount()}  this.ID:${Thread.currentThread().id}  $SAMPLE_DELAY ms,  ${ViimeisinMaxAmplitude.toInt()} BING BING !!!!!")
             count = count + 1
@@ -358,7 +393,7 @@ class ReactionActivity : AppCompatActivity() {
             println("KONSOLI   : jälkitärinää vain.. NOT count")
         }
 
-    }
+    }*/
 
 
     private fun resetProgress() {
@@ -474,6 +509,25 @@ class ReactionActivity : AppCompatActivity() {
 
     private fun aloita() {
 
+        // jos focus on stopwatchissa niin heittää näppiksen alas ja ottaa myöhemmin focuksen pois
+        if (et_Minutes_reaction.isFocused || et_Hours_Reaction.isFocused || et_Seconds_Reaction.isFocused || et_Millis_Reaction.isFocused  ) {
+            //tiputtaa näppiksen pois jos vahingossa on jäänyt päälle
+            val imm = getSystemService(Activity.INPUT_METHOD_SERVICE) as InputMethodManager
+            imm.toggleSoftInput(InputMethodManager.HIDE_IMPLICIT_ONLY, 0)
+        }
+
+        //jottei focus ole valittuna editTexteihin. ettei jää kursori vilkkumaan sinne treenin ajaksi keskelle stopwatchia
+        findViewById(R.id.MainLinearLayout).requestFocus()
+
+        //pitää huolen, ettei voi olla tyhjiä aikakenttiä vaan muuttaa ne nolliksi
+        if (et_Hours_Reaction.text.toString() == "") {
+            et_Hours_Reaction.setText("0",TextView.BufferType.EDITABLE)
+        }
+
+        if (et_Minutes_reaction.text.toString() == "") {
+            et_Minutes_reaction.setText("0",TextView.BufferType.EDITABLE)
+        }
+
         RandomMin = et_Random_Min.text.toString().toInt() * 1000
         RandomMax = et_Random_Max.text.toString().toInt() * 1000
         RoundStartsIn = et_RoundStartsInSeconds.text.toString().toInt() * 1000
@@ -491,6 +545,9 @@ class ReactionActivity : AppCompatActivity() {
         RoundLengthMillis = (et_Hours_Reaction.text.toString().toLong() * 60 * 60 * 1000) + (et_Minutes_reaction.text.toString().toLong() * 1000 * 60) + (et_Seconds_Reaction.text.toString().toLong() * 1000)
         println("KONSOLI   : ROUNDLENGHT MILLIS : $RoundLengthMillis")
 
+        // RANDOM
+        var RandomTimer = Timer()       // tämä on siis vain schedulea varten ei ole itsessään random. Satunnaisgeneraattori on se varsinainen random
+        var RandomBeepTime = satunnaisGeneraattori.nextInt(RandomMax-RandomMin) + RandomMin
 
         //laittaa Round timerin päälle if count == 0
         if (count == 0) {
@@ -512,7 +569,7 @@ class ReactionActivity : AppCompatActivity() {
                                 seconds = (aikaTekstiksi.toInt() / 1000) % 60
                                 minutes = (aikaTekstiksi.toInt() / 60000) % 60
                                 hours = (aikaTekstiksi.toInt() / 3600000) % 60
-                                //tv_Count.text = "$hours : $minutes : $seconds : $millis"
+
                                 et_Hours_Reaction.setText(hours.toString(),TextView.BufferType.EDITABLE)
                                 et_Minutes_reaction.setText(minutes.toString(),TextView.BufferType.EDITABLE)
                                 et_Seconds_Reaction.setText(seconds.toString(),TextView.BufferType.EDITABLE)
@@ -529,7 +586,7 @@ class ReactionActivity : AppCompatActivity() {
 
                         }.start()
                     }
-                }}, RoundStartsIn.toLong())
+                }}, RoundStartsIn.toLong() + RandomBeepTime.toLong())
         }
 
 
@@ -545,16 +602,13 @@ class ReactionActivity : AppCompatActivity() {
         CalibrationThread?.interrupt()
         CalibrationInProgress = false
 
-        // RANDOM
-        var RandomTimer = Timer()       // tämä on siis vain schedulea varten ei ole itsessään random. Satunnaisgeneraattori on se varsinainen random
-        var RandomBeepTime = satunnaisGeneraattori.nextInt(RandomMax-RandomMin) + RandomMin
+
         println("KONSOLI   : randomBeep() $RandomBeepTime")
 
         //jos eka kierros lähtee pyörimään
         if (count == 0) {
             RandomBeepTime = RandomBeepTime + RoundStartsIn                         // lisää 3 sekunttia EKAAN randomiin
-            runOnUiThread { toast("STARTING! in ${RoundStartsIn / 1000} sec!") }
-            runOnUiThread { tv_info3.text = "Round starts in ${RoundStartsIn / 1000} seconds, wait for it..." }
+            runOnUiThread { tv_info3.text = "Round starts in ${RoundStartsIn / 1000} + random seconds" }
         }
 
 
@@ -697,9 +751,6 @@ class ReactionActivity : AppCompatActivity() {
 
         SaveScore()
 
-        // miksei tämä tule näkyviin?   koska ReactionHitDetected pyörähtää vielä kerran
-        //runOnUiThread { tv_Count.text = "Total Count : $count   The Round has ended." }
-
         println("KONSOLI   :  LOPULLINEN KESKIARVO     ----------------------------------------------")
         println("KONSOLI   :  LOPULLINEN KESKIARVO     ${arrayReactionResult!!.average().toInt()} ms")
         println("KONSOLI   :  LOPULLINEN KESKIARVO     ----------------------------------------------")
@@ -751,7 +802,7 @@ class ReactionActivity : AppCompatActivity() {
             }
 
             count = count + 1
-            runOnUiThread { tv_Count.text = "Count  :  $count" }
+            runOnUiThread { tv_Count.text = "Count : $count" }
             HowLongSinceLastHit = 0
 
             // näyttää reaktio ajan konsolissa! millisekuntteina
@@ -767,8 +818,8 @@ class ReactionActivity : AppCompatActivity() {
             //runOnUiThread { tvHistory.text = "$ReactionResultTIME \n ${tvHistory.text}" }
 
             //jottei HIT punainen pallo mene chartista yli...
-            if (ViimeisinMaxAmplitude > 200) {
-                seriesHITs.appendData(DataPoint(x, 200.0), true, 50)
+            if (ViimeisinMaxAmplitude > 29000) {
+                seriesHITs.appendData(DataPoint(x, 29000.0), true, 50)
             } else {
                 seriesHITs.appendData(DataPoint(x, ViimeisinMaxAmplitude), true, 50)
             }
@@ -856,6 +907,8 @@ class ReactionActivity : AppCompatActivity() {
                 //println("bKONSOLI   :  BufferReadResult : $bufferReadResult / $bufferSize")
                 var sumLevel = 0.0
 
+                println("KONSOLI   : BUFFER   $bufferReadResult")
+
                 //TYÖ miksi toDouble? miksei short kävisi?
                 //sumLeveliin lisätään jokainen buffer arrayn arvo 0...640 (bufferReadResult)
                 for (i in 0..bufferReadResult - 1) {
@@ -868,12 +921,13 @@ class ReactionActivity : AppCompatActivity() {
             }
 
         } catch (e: Exception) {
+            println("KONSOLI   : maxAmp val buffer error")
             e.printStackTrace()
         }
 
     }
 
-    // menee on pauseen myös jos laitetta kääntää!
+/*    // menee on pauseen myös jos laitetta kääntää!
     override fun onPause() {
         super.onPause()
         println("KONSOLI   : onPause ...")
@@ -891,15 +945,74 @@ class ReactionActivity : AppCompatActivity() {
             }
         }
 
+    }*/
+
+
+
+    override fun onBackPressed() {
+        super.onBackPressed()
+
+        thread?.interrupt()
+        CalibrationThread!!.interrupt()
+        audioRec!!.stop()
+        audioRec!!.release()
+        audioRec = null
+        startActivity(Intent(this@ReactionActivity, MainMenuActivity::class.java))
+        finish()
 
     }
+
+    //vanha setti jolla yritin saada back and reaction again graafin toimimaan
+   /*
+    override fun onBackPressed() {
+        super.onBackPressed()
+
+        println("KONSOLI   : BACK PRESSED")
+        println("KONSOLI   : BACK PRESSED")
+
+        if (thread != null) {
+            thread!!.interrupt()
+            thread = null
+            try {
+                if (audioRec != null) {
+                    audioRec!!.stop()
+                    audioRec!!.release()
+                    audioRec = null
+                }
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+        }
+
+        if (CalibrationThread != null) {
+            CalibrationThread!!.interrupt()
+            CalibrationThread = null
+        }
+
+        series = LineGraphSeries<DataPoint>()
+        seriesHITs = PointsGraphSeries<DataPoint>()
+        thresholdLineinGraph = LineGraphSeries<DataPoint>()
+        seriesReaction = LineGraphSeries<DataPoint>()
+        Yline  = 0.0
+        x  = 0.0
+        xReaction  = 0.0
+
+        seriesHITs = seriesHardReset
+        //historyGraph.removeAllSeries()
+
+        graph.removeAllSeries()
+
+        arrayReactionResult?.clear()
+
+
+    }*/
 
 
     //An object declaration inside a class can be marked with the companion keyword
     companion object {
 
         private var sampleRate = 8000
-        private val SAMPLE_DELAY = 20
+        private val SAMPLE_DELAY = 40
 
         //private val LOG_TAG = "AudioRecordTest"
         val REQUEST_RECORD_AUDIO_PERMISSION = 200

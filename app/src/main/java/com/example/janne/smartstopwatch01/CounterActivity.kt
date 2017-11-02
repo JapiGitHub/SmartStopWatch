@@ -2,29 +2,27 @@ package com.example.janne.smartstopwatch01
 
 import android.Manifest
 import android.content.Context
+import android.content.pm.ActivityInfo
 import android.content.pm.PackageManager
 import android.graphics.Color
 import android.media.AudioFormat
 import android.media.AudioRecord
 import android.media.MediaRecorder
 import android.os.Bundle
-import android.provider.ContactsContract
 import android.support.v4.app.ActivityCompat
 import android.support.v7.app.AppCompatActivity
 import android.view.Window
 import android.view.WindowManager
-import android.widget.EditText
 import android.widget.SeekBar
-import android.widget.TextView
 import com.jjoe64.graphview.GraphView
 import com.jjoe64.graphview.series.DataPoint
 import com.jjoe64.graphview.series.LineGraphSeries
 import com.jjoe64.graphview.series.PointsGraphSeries
 import kotlinx.android.synthetic.main.activity_counter.*
 import org.jetbrains.anko.sdk25.coroutines.onClick
-import java.io.File
+import org.jetbrains.anko.toast
 import java.io.FileNotFoundException
-import java.io.FileOutputStream
+import java.io.IOException
 import java.io.PrintWriter
 
 
@@ -41,10 +39,10 @@ class CounterActivity : AppCompatActivity() {
 
     private var maxAmpEver = 0
 
-    private var threshold = 1500
+    private var threshold = 17000
     var thresholdDouble : Double = threshold.toDouble()
     private var thresholdStrIntDUMP : String = "61"
-    lateinit var etThreshold : EditText
+    //lateinit var etThreshold : EditText
 
     //graph
     lateinit var series: LineGraphSeries<DataPoint>
@@ -93,6 +91,10 @@ class CounterActivity : AppCompatActivity() {
         setContentView(R.layout.activity_counter)
         supportActionBar!!.hide()
 
+        // pitää portraittina!
+        setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT)        // pitää portraittina!
+        setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT)
+
         for (rate in intArrayOf(44100, 22050, 11025, 16000, 8000)) {  // add the rates you wish to check against
             bufferSize = AudioRecord.getMinBufferSize(rate, AudioFormat.CHANNEL_IN_MONO, AudioFormat.ENCODING_PCM_16BIT)
             if (bufferSize > 0) {
@@ -109,7 +111,6 @@ class CounterActivity : AppCompatActivity() {
                 threshold = sb_Threshold.progress
                 thresholdDouble = threshold.toDouble()
                 println("KONSOLI   :  threshold set to : $threshold")
-                etThreshold.setText("${sb_Threshold.progress}", TextView.BufferType.EDITABLE)
             }
             override fun onStartTrackingTouch(seekBar: SeekBar?) {}
             override fun onStopTrackingTouch(seekBar: SeekBar?) {}
@@ -119,7 +120,6 @@ class CounterActivity : AppCompatActivity() {
         sb_waitNextHit.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener{
             override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {
                 println("KONSOLI   : seekbar : ${sb_waitNextHit.progress}")
-                tv_info.text = "seekbar : ${sb_waitNextHit.progress}"
                 WaitBeforeStartCountingAgain = sb_waitNextHit.progress
             }
             override fun onStartTrackingTouch(seekBar: SeekBar?) { }
@@ -127,8 +127,7 @@ class CounterActivity : AppCompatActivity() {
         })
 
         //napit
-        buttReactionCalibration.onClick     { calibrate() }
-        buttReactionStart.onClick           { aloita() }
+        butt_SaveCount.onClick           { SaveAndExit() }
         butt_Reset.onClick                  { ResetCount() }
 
 
@@ -140,10 +139,21 @@ class CounterActivity : AppCompatActivity() {
         seriesHITs = PointsGraphSeries<DataPoint>()
         thresholdLineinGraph = LineGraphSeries<DataPoint>()
 
-        seriesHITs.color = Color.RED
-        seriesHITs.size = 60f
+        //threshold line   #a1a193      btw. se tummempi väri on #5b605f
+        val ThresholdColorOrange = Color.argb(200,255,102,0)
+        thresholdLineinGraph.color = ThresholdColorOrange
+        thresholdLineinGraph.thickness = 7
 
-        series.thickness = 15
+
+        series.color = Color.TRANSPARENT
+        series.isDrawBackground = true
+        val graphColorBluish = Color.argb(200, 161, 161, 147)
+        series.backgroundColor = graphColorBluish
+
+        seriesHITs.color = ThresholdColorOrange
+        seriesHITs.size = 50f
+
+        series.thickness = 2
 
         graph.gridLabelRenderer.isVerticalLabelsVisible = false
         graph.gridLabelRenderer.isHorizontalLabelsVisible = false
@@ -161,7 +171,7 @@ class CounterActivity : AppCompatActivity() {
         // set manual X bounds
         graph.getViewport().setXAxisBoundsManual(true)
         graph.getViewport().setMinX(0.0)
-        graph.getViewport().setMaxX(25.0)
+        graph.getViewport().setMaxX(50.0)
 
 
 
@@ -177,6 +187,86 @@ class CounterActivity : AppCompatActivity() {
         */
         // graph loppuu >
 
+
+
+
+
+
+        //UUSI heti alkava calibrate
+        audioRec = AudioRecord(MediaRecorder.AudioSource.MIC, sampleRate,
+                AudioFormat.CHANNEL_IN_MONO,
+                AudioFormat.ENCODING_PCM_16BIT, bufferSize)
+
+        println("KONSOLI   : pahse 1")
+        audioRec!!.startRecording()
+
+
+        thread = Thread(Runnable {
+            while (thread != null && !thread!!.isInterrupted) {
+                //sleep  for SAMPLE_DELAY tutkimisen välissä
+                try {
+                    Thread.sleep(SAMPLE_DELAY.toLong())
+                } catch (ie: InterruptedException) {
+                    ie.printStackTrace()
+                }
+                HowLongSinceLastHit += 1
+                MaxAmplitudeTest()      //maxAmp testi
+
+
+                if (ViimeisinMaxAmplitude > threshold) {
+                    hitDetected()
+                }
+
+/*                if (ViimeisinMaxAmplitude > maxAmpEver) {
+                    maxAmpEver = ViimeisinMaxAmplitude.toInt()
+                    runOnUiThread { tv_info.text ="max : $maxAmpEver" }
+                }*/
+
+                println("KONSOLI   :   phase 2")
+                runOnUiThread {
+                    x = x + 1
+                    series.appendData(DataPoint(x, ViimeisinMaxAmplitude), true, 50)
+
+                    Yline = thresholdDouble
+                    thresholdLineinGraph.appendData(DataPoint(x, Yline), true, 50)
+
+
+                    //tämä tarvii olla jottei kaadu heti 50x mittauksen jälkeen...
+                    if (x.toInt() % 50 == 1) {
+                        graph.removeAllSeries()
+                        graph.addSeries(series)
+                        graph.addSeries(seriesHITs)
+                        graph.addSeries(thresholdLineinGraph)
+                    }
+                }
+/*                when {
+                    (ViimeisinMaxAmplitude < 10)                                      -> println("KONSOLI   :max amp on 0x   : ${ViimeisinMaxAmplitude.toInt()}  *")
+                    ((ViimeisinMaxAmplitude >=10) && (ViimeisinMaxAmplitude < 20))    -> println("KONSOLI   :max amp on 1x   : ${ViimeisinMaxAmplitude.toInt()}  **")
+                    ((ViimeisinMaxAmplitude >=20) && (ViimeisinMaxAmplitude < 30))    -> println("KONSOLI   :max amp on 2x   : ${ViimeisinMaxAmplitude.toInt()}  ***")
+                    ((ViimeisinMaxAmplitude >=30) && (ViimeisinMaxAmplitude < 40))    -> println("KONSOLI   :max amp on 3x   : ${ViimeisinMaxAmplitude.toInt()}  ****")
+                    ((ViimeisinMaxAmplitude >=40) && (ViimeisinMaxAmplitude < 50))    -> println("KONSOLI   :max amp on 4x   : ${ViimeisinMaxAmplitude.toInt()}  *****")
+                    ((ViimeisinMaxAmplitude >=50) && (ViimeisinMaxAmplitude < 60))    -> println("KONSOLI   :max amp on 5x   : ${ViimeisinMaxAmplitude.toInt()}  ******")
+                    ((ViimeisinMaxAmplitude >=60) && (ViimeisinMaxAmplitude < 70))    -> println("KONSOLI   :max amp on 6x   : ${ViimeisinMaxAmplitude.toInt()}  *******")
+                    ((ViimeisinMaxAmplitude >=70) && (ViimeisinMaxAmplitude < 80))    -> println("KONSOLI   :max amp on 7x   : ${ViimeisinMaxAmplitude.toInt()}  ********")
+                    ((ViimeisinMaxAmplitude >=80) && (ViimeisinMaxAmplitude < 90))    -> println("KONSOLI   :max amp on 8x   : ${ViimeisinMaxAmplitude.toInt()}  *********")
+                    ((ViimeisinMaxAmplitude >=90) && (ViimeisinMaxAmplitude < 100))   -> println("KONSOLI   :max amp on 9x   : ${ViimeisinMaxAmplitude.toInt()}  **********")
+                    ((ViimeisinMaxAmplitude >=100) && (ViimeisinMaxAmplitude < 110))  -> println("KONSOLI   :max amp on 10x  : ${ViimeisinMaxAmplitude.toInt()}  ***********")
+                    ((ViimeisinMaxAmplitude >=110) && (ViimeisinMaxAmplitude < 120))  -> println("KONSOLI   :max amp on 11x  : ${ViimeisinMaxAmplitude.toInt()}  MAXXXXXXXXXXXXX")
+                //ViimeisinMaxAmplitude > 60      -> hitDetected()
+                //ViimeisinMaxAmplitude == 0.0    -> println("KONSOLI   : total:${Thread.activeCount()}  this.ID:${Thread.currentThread().id}  $SAMPLE_DELAY ms,  ${ViimeisinMaxAmplitude.toInt()}   default")
+                    else                            -> println("KONSOLI   : total:${Thread.activeCount()}  this.ID:${Thread.currentThread().id}  $SAMPLE_DELAY ms,  ${ViimeisinMaxAmplitude.toInt()} -?????")
+                }*/
+            }
+        })
+
+
+        println("KONSOLI   : total:${Thread.activeCount()}  this.ID:${Thread.currentThread().id}  THREAD LOPPUI     ***      ***")
+        thread!!.start()
+
+
+
+    println("KONSOLI   : phase final")
+
     }
 
 
@@ -185,6 +275,27 @@ class CounterActivity : AppCompatActivity() {
         runOnUiThread { tv_Count.text = "0" }
     }
 
+
+    private fun SaveAndExit() {
+        println("KONSOLI   : saving started")
+
+        // tänne tallennus ja siirtyminen Ending activityyn
+        val ScoreToFile : String = "${count.toString()}\n"
+        try {
+            val fileOutputStream = openFileOutput("score_counter.txt", Context.MODE_APPEND)    // MODE_APPEND lisää tiedoston perään
+            fileOutputStream.write(ScoreToFile.toByteArray())
+            fileOutputStream.close()
+
+            println("KONSOLI   : score average saved to file $ScoreToFile")
+            runOnUiThread { toast("Your score is saved to YOUR PROGRESS") }
+
+            // throws
+        } catch (e: FileNotFoundException) {
+            e.printStackTrace()
+        } catch (e: IOException) {
+            e.printStackTrace()
+        }
+    }
 
     //onResume alkaa aina onCreaten (tai onStartin) jälkeen ja lisäksi onPausen jälkeen.
     override fun onResume() {
@@ -228,11 +339,10 @@ class CounterActivity : AppCompatActivity() {
             count = count + 1
             println("KONSOLI   : KOUNTTI  $count")
 
-            runOnUiThread { tvHistory.text = "${ViimeisinMaxAmplitude.toInt()} \n ${tvHistory.text}" }
 
             //jottei HIT punainen pallo mene chartista yli...
-            if (ViimeisinMaxAmplitude > 200) {
-                seriesHITs.appendData(DataPoint(x, 200.0), true, 25)
+            if (ViimeisinMaxAmplitude > 32000) {
+                seriesHITs.appendData(DataPoint(x, 30000.0), true, 25)
             } else {
                 seriesHITs.appendData(DataPoint(x, ViimeisinMaxAmplitude), true, 25)
             }
@@ -250,16 +360,8 @@ class CounterActivity : AppCompatActivity() {
 
 
 
-    private fun calibrate() {
-
-
-
+/*    private fun calibrate() {
         println("KONSOLI   : calibrate funktio alkaa ...")
-        // tähän looppi recordaamaan esim 20 kierrosta ja sitten katsomaan loudest noise.
-        //threshold = loudest noise * 0.8
-
-
-        runOnUiThread { tv_info.text = "Do your activity in next 5 seconds and I know what to listen for..." }
 
         // initializing audioRec
         println("KONSOLI   : initializing AudioRec")                            //  TYÖ  jostain syystä tää tulee 2x
@@ -289,23 +391,17 @@ class CounterActivity : AppCompatActivity() {
                     hitDetected()
                 }
 
-                if (ViimeisinMaxAmplitude > maxAmpEver) {
-                    maxAmpEver = ViimeisinMaxAmplitude.toInt()
-                    runOnUiThread { tv_info.text ="max : $maxAmpEver" }
-                }
-
-
 
                 //TYÖ
                 x = x + 1
-                series.appendData(DataPoint(x,ViimeisinMaxAmplitude), true, 25)
+                series.appendData(DataPoint(x,ViimeisinMaxAmplitude), true, 50)
 
                 Yline = thresholdDouble
-                thresholdLineinGraph.appendData(DataPoint(x, Yline), true, 25)
+                thresholdLineinGraph.appendData(DataPoint(x, Yline), true, 50)
 
 
                 //tämä tarvii olla jottei kaadu heti 50x mittauksen jälkeen...
-                if (x.toInt() % 25 == 1) {
+                if (x.toInt() % 50 == 1) {
                     graph.removeAllSeries()
                     graph.addSeries(series)
                     graph.addSeries(seriesHITs)
@@ -341,7 +437,7 @@ class CounterActivity : AppCompatActivity() {
 
 
 
-    }
+    }*/
 
 
     private fun aloita() {
@@ -466,7 +562,7 @@ class CounterActivity : AppCompatActivity() {
     override fun onPause() {
         super.onPause()
         println("KONSOLI   : onPause ...")
-        if (thread != null) {
+/*        if (thread != null) {
             thread!!.interrupt()
             thread = null
             try {
@@ -478,7 +574,7 @@ class CounterActivity : AppCompatActivity() {
             } catch (e: Exception) {
                 e.printStackTrace()
             }
-        }
+        }*/
 
 
     }

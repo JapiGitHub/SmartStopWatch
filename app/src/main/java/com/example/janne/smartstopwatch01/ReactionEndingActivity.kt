@@ -1,7 +1,12 @@
 package com.example.janne.smartstopwatch01
 
+import android.content.Intent
+import android.content.pm.ActivityInfo
+import android.graphics.Color
 import android.support.v7.app.AppCompatActivity
 import android.os.Bundle
+import android.view.Window
+import android.view.WindowManager
 import com.jjoe64.graphview.GraphView
 import com.jjoe64.graphview.series.DataPoint
 import com.jjoe64.graphview.series.LineGraphSeries
@@ -18,7 +23,14 @@ class ReactionEndingActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        requestWindowFeature(Window.FEATURE_NO_TITLE)
+        window.setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN,
+                WindowManager.LayoutParams.FLAG_FULLSCREEN)
         setContentView(R.layout.activity_reaction_ending)
+        supportActionBar!!.hide()
+
+        // pitää portraittina!
+        setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT)
 
         //INTENT DATAn HAKU
         val intent = getIntent()
@@ -30,7 +42,7 @@ class ReactionEndingActivity : AppCompatActivity() {
         println("KONSOLI   : End Count  : $EndCount")
         //println("KONSOLI   : ARRAYYYY ${ScoreArray[1]}")
         tv_Count_RE.text = "Total count : $EndCount"
-        tv_Average_RE.text = "Session average reaction time : ${average}"
+        tv_Average_RE.text = "Session average reaction time : ${(average.toDouble().toInt().toDouble())/1000}  seconds"
         //println("KONSOLI   : $dataa")
 
 
@@ -45,12 +57,52 @@ class ReactionEndingActivity : AppCompatActivity() {
             graph.getViewport().setMinY(0.0)
             graphview.getViewport().setMaxY(32000.0)
 
+
+            series.color = Color.TRANSPARENT
+            series.isDrawBackground = true
+            val graphColorBluish = Color.argb(200, 161, 161, 147)
+            series.backgroundColor = graphColorBluish
+
+
+            //threshold line
+            val ThresholdColorBlue = Color.argb(200,255,102,0)
+            thresholdLineinGraph.color = ThresholdColorBlue
+            thresholdLineinGraph.thickness = 7
+
+            graph.gridLabelRenderer.isVerticalLabelsVisible = false
+            graph.gridLabelRenderer.isHorizontalLabelsVisible = false
+            graph.gridLabelRenderer.isHighlightZeroLines = false
+
+            graph.gridLabelRenderer.gridColor = 0
+
+
          */
 
 
-        seriesReactionScoreHistory = LineGraphSeries<DataPoint>()
+        
         seriesThisSession = LineGraphSeries<DataPoint>()
 
+        seriesThisSession.isDrawBackground = true
+        val graphColorBluish = Color.argb(200, 161, 161, 147)
+        seriesThisSession.backgroundColor = graphColorBluish
+        seriesThisSession.color = Color.TRANSPARENT
+        ThisSessionRE.gridLabelRenderer.isVerticalLabelsVisible = true
+        ThisSessionRE.gridLabelRenderer.isHorizontalLabelsVisible = false
+        ThisSessionRE.gridLabelRenderer.isHighlightZeroLines = false
+        ThisSessionRE.gridLabelRenderer.gridColor = 0
+
+
+        seriesReactionScoreHistory = LineGraphSeries<DataPoint>()
+        seriesReactionScoreHistory.color = Color.TRANSPARENT
+        seriesReactionScoreHistory.isDrawBackground = true
+        seriesReactionScoreHistory.backgroundColor = graphColorBluish
+        yourProgressReactionRE.gridLabelRenderer.isVerticalLabelsVisible = true
+        yourProgressReactionRE.gridLabelRenderer.isHorizontalLabelsVisible = false
+        yourProgressReactionRE.gridLabelRenderer.isHighlightZeroLines = false
+        yourProgressReactionRE.gridLabelRenderer.gridColor = 0
+        
+        
+        
         //this session
         for (i in 0..(ScoreArray.size-1)) {
             println("KONSOLI   : score this session :  ${ScoreArray[i]}")
@@ -99,7 +151,12 @@ class ReactionEndingActivity : AppCompatActivity() {
     }
 
 
+    override fun onBackPressed() {
+        super.onBackPressed()
+        startActivity(Intent(this@ReactionEndingActivity, MainMenuActivity::class.java))
+        finish()
 
+    }
 
 
 

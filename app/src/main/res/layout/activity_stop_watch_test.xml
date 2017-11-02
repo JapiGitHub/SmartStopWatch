@@ -11,7 +11,7 @@
 
     <TextView
             android:fontFamily="sans-serif-condensed"
-            android:textStyle="bold" android:textAllCaps="false" android:textColor="#000000"
+            android:textStyle="bold" android:textAllCaps="false" android:textColor="#464646"
             android:id="@+id/tv_Timer"
             android:text="00:00:00 : 00"
             android:textSize="55sp"

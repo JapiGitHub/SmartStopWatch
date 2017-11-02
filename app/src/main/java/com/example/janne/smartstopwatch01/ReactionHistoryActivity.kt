@@ -1,6 +1,7 @@
 package com.example.janne.smartstopwatch01
 
 import android.content.Context
+import android.graphics.Color
 import android.support.v7.app.AppCompatActivity
 import android.os.Bundle
 import android.view.View
@@ -9,7 +10,7 @@ import android.view.WindowManager
 import com.jjoe64.graphview.GraphView
 import com.jjoe64.graphview.series.DataPoint
 import com.jjoe64.graphview.series.LineGraphSeries
-import kotlinx.android.synthetic.main.activity_count_history.*
+
 import kotlinx.android.synthetic.main.activity_reaction_history.*
 import java.io.*
 
@@ -34,15 +35,29 @@ class ReactionHistoryActivity : AppCompatActivity() {
         var yourProgressReaction : GraphView = findViewById(R.id.yourProgressReaction) as GraphView
         seriesReactionScore = LineGraphSeries<DataPoint>()
 
-        read()
+
+        seriesReactionScore.color = Color.TRANSPARENT
+        seriesReactionScore.isDrawBackground = true
+        val graphColorBluish = Color.argb(200, 161, 161, 147)
+        seriesReactionScore.backgroundColor = graphColorBluish
+
+
+        yourProgressReaction.gridLabelRenderer.isVerticalLabelsVisible = true
+        yourProgressReaction.gridLabelRenderer.isHorizontalLabelsVisible = false
+        yourProgressReaction.gridLabelRenderer.isHighlightZeroLines = false
+
+        yourProgressReaction.gridLabelRenderer.gridColor = 0
+
+        yourProgressReaction.getViewport().setScrollable(true)
+
+        //read()
 
         readLines()
 
     }
 
 
-
-    private fun read () {
+/*    private fun read () {
         try {
             var fileInputStream = openFileInput("score_reaction.txt")
 
@@ -50,7 +65,7 @@ class ReactionHistoryActivity : AppCompatActivity() {
 
             println("KONSOLI   : allText:  $allText")
 
-            runOnUiThread { tv_ReactionInfo.text = allText.toString() }
+            //runOnUiThread { tv_ReactionInfo.text = allText.toString() }
 
             //throws
         } catch (e: FileNotFoundException) {
@@ -61,7 +76,7 @@ class ReactionHistoryActivity : AppCompatActivity() {
             e.printStackTrace()
         }
 
-    }
+    }*/
 
 
     private fun readLines () {

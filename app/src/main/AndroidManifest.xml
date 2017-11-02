@@ -2,6 +2,10 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
           package="com.example.janne.smartstopwatch01">
 
+    <!-- permission AdMob mainokseen = netti -->
+    <uses-permission android:name="android.permission.INTERNET"></uses-permission>
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"></uses-permission>
+    
     <!-- permission nauhoitukseen, toimiakseen piti olla </application> jälkeen vasta -->
     <uses-permission android:name="android.permission.RECORD_AUDIO"/>
 
@@ -15,14 +19,19 @@
             android:roundIcon="@mipmap/ic_launcher_round"
             android:supportsRtl="true"
             android:theme="@style/AppTheme">
-        <activity android:name=".MainMenuActivity">
+        <activity android:name=".MainMenuActivity"
+
+                  android:noHistory="true"
+                  android:clearTaskOnLaunch ="true">
+            <!-- noHistory ja cleartaskonLaunch auttaa back button graafi ongelmissa -->
             <intent-filter>
                 <action android:name="android.intent.action.MAIN"/>
 
                 <category android:name="android.intent.category.LAUNCHER"/>
             </intent-filter>
         </activity>
-        <activity android:name=".ReactionActivity">
+        <activity android:name=".ReactionActivity"
+                  android:noHistory="true">
         </activity>
         <activity android:name=".CounterActivity"
                   android:screenOrientation="sensorPortrait"
@@ -37,10 +46,6 @@
         <activity android:name=".stopWatchTest">
         </activity>
         <activity android:name=".chronoTest">
-        </activity>
-        <activity android:name=".StopWatchProperActivity">
-        </activity>
-        <activity android:name=".StopWatchActivity">
         </activity>
         <activity android:name=".RoundTimerActivity">
         </activity>

@@ -2,6 +2,7 @@ package com.example.janne.smartstopwatch01
 
 import android.Manifest
 import android.content.Intent
+import android.content.pm.ActivityInfo
 import android.content.pm.PackageManager
 import android.os.Bundle
 import android.support.v4.app.ActivityCompat
@@ -65,6 +66,9 @@ class MainMenuActivity : AppCompatActivity() {
         setContentView(R.layout.activity_main_menu)
         supportActionBar!!.hide()
 
+        // pitää portraittina!
+        setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT)
+
         //permissions
         ActivityCompat.requestPermissions(this, permissions, REQUEST_RECORD_AUDIO_PERMISSION)
 
@@ -74,34 +78,44 @@ class MainMenuActivity : AppCompatActivity() {
         buttReaction.onClick                { startActivity(Intent(this@MainMenuActivity,ReactionActivity::class.java)) }
         buttReactionHistory.onClick         { startActivity(Intent(this@MainMenuActivity,ReactionHistoryActivity::class.java)) }
         buttCountREPs.onClick               { startActivity(Intent(this@MainMenuActivity,CounterActivity::class.java)) }
-        buttCountHistory.onClick            { startActivity(Intent(this@MainMenuActivity,chronoTest::class.java)) }
+        buttCountHistory.onClick            { startActivity(Intent(this@MainMenuActivity,CountHistoryActivity::class.java)) }
         buttSettings.onClick                { startActivity(Intent(this@MainMenuActivity,RoundTimerActivity::class.java)) }
 
         butt_start.onClick { startStpWatch() }
-        butt_stop.onClick { stopStpWatch() }
+        //butt_stop.onClick { stopStpWatch() }
         butt_reset.onClick { Reset() }
 
-        tv_BasicStopwatch.text = "00:00:00: 00"
+        tv_BasicStopwatch.text = "0:0:0:000"
+
 
     }
 
 
     fun startStpWatch() {
-        stpWtchIsRunning = true
-        println("KONSOLI   : stopwatch has been started")
 
-        //tarkistaa onko vaan pausella vai onko mittari nollissa
-        if (aikaTekstiksi > 1 ) {
-            //mittari ei ole nollissa, eli on vaan pausella, jatketaan siis siitä mihin jäätiin
-            //lopetetaan pause ja katotaan paljonko aikaa meni pausen aikana
-            pauseTimeResult = System.currentTimeMillis() - pauseTimeStart
-            println("KONSOLI   : pause   $pauseTimeResult")
-        } else {
-            //mittari nollissa, joten voi huoletta lähteä alusta liikkeelle
-            startTime = System.currentTimeMillis()
+        if (butt_start.text == "PAUSE") { stopStpWatch() }
+            else {
+            stpWtchIsRunning = true
+
+            println("KONSOLI   : stopwatch has been started")
+
+            //tarkistaa onko vaan pausella vai onko mittari nollissa
+            if (aikaTekstiksi > 1 ) {
+                //mittari ei ole nollissa, eli on vaan pausella, jatketaan siis siitä mihin jäätiin
+                //lopetetaan pause ja katotaan paljonko aikaa meni pausen aikana
+                pauseTimeResult = System.currentTimeMillis() - pauseTimeStart
+                println("KONSOLI   : pause   $pauseTimeResult")
+            } else {
+                //mittari nollissa, joten voi huoletta lähteä alusta liikkeelle
+                startTime = System.currentTimeMillis()
+            }
+
+            tv_BasicStopwatch.postDelayed(Runnable { updateTextView() }, 50)
+
+            butt_start.text = "PAUSE"
         }
 
-        tv_BasicStopwatch.postDelayed(Runnable { updateTextView() }, 50)
+
     }
 
 
@@ -122,7 +136,7 @@ class MainMenuActivity : AppCompatActivity() {
         updateTimes()
 
         if (stpWtchIsRunning) {
-            runOnUiThread { tv_BasicStopwatch.text = "$hours:$minutes:$seconds : $millis" }
+            runOnUiThread { tv_BasicStopwatch.text = "$hours:$minutes:$seconds:$millis" }
         }
 
         //jatkaa päivittämistä 50ms välein
@@ -134,6 +148,7 @@ class MainMenuActivity : AppCompatActivity() {
 
 
     private fun stopStpWatch() {
+
         println("KONSOLI   : STOPPIA painettu")
 
         if (stpWtchIsRunning) {
@@ -161,11 +176,12 @@ class MainMenuActivity : AppCompatActivity() {
         if (stpWtchIsRunning) { tv_BasicStopwatch.text = "$hours:$minutes:$seconds : $millis" }
         println("KONSOLI   : STOPPED ! $hours:$minutes:$seconds : $millis ")
 
+        butt_start.text = "START"
     }
 
     private fun Reset() {
 
-        runOnUiThread { tv_BasicStopwatch.text = "00:00:00 : 00" }
+        runOnUiThread { tv_BasicStopwatch.text = "00:00:00:000" }
 
         stpWtchIsRunning = false
         startTime = 0
@@ -180,7 +196,10 @@ class MainMenuActivity : AppCompatActivity() {
 
         aikaTekstiksi = 0
 
-        runOnUiThread { tv_BasicStopwatch.text = "00:00:00 : 00" }
+        runOnUiThread {
+            tv_BasicStopwatch.text = "0:0:0:000"
+            butt_start.text = "START"
+        }
 
     }
 
