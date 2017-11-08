@@ -137,7 +137,7 @@ class ReactionActivity : AppCompatActivity() {
         // pitää portraittina!
         setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT)
 
-        findViewById(R.id.MainLinearLayout).requestFocus()
+        MainLinearLayout.requestFocus()
 
         //buffersize determination
         for (rate in intArrayOf(44100, 22050, 11025, 16000, 8000)) {  // add the rates you wish to check against
@@ -151,7 +151,7 @@ class ReactionActivity : AppCompatActivity() {
 
 
         // SEEKBARit
-        sbThreshold = findViewById(R.id.sb_Threshold) as SeekBar
+        sbThreshold = findViewById<SeekBar>(R.id.sb_Threshold)
         sbThreshold.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
             override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {
 
@@ -173,7 +173,9 @@ class ReactionActivity : AppCompatActivity() {
 
 
         // GRAPHit  <
-        var graphview : GraphView = findViewById(R.id.graph) as GraphView
+
+        //var graphview : GraphView = findViewById(R.id.graph) as GraphView        vanha SDK 25
+        var graphview = findViewById<GraphView>(R.id.graph)
         //var HistoryGraph : GraphView = findViewById(R.id.historyGraph) as GraphView
 
         //ääni graafit
@@ -517,7 +519,7 @@ println("KONSOLI   : viimeisin max AMP   :   $ViimeisinMaxAmplitude")
         }
 
         //jottei focus ole valittuna editTexteihin. ettei jää kursori vilkkumaan sinne treenin ajaksi keskelle stopwatchia
-        findViewById(R.id.MainLinearLayout).requestFocus()
+        MainLinearLayout.requestFocus()
 
         //pitää huolen, ettei voi olla tyhjiä aikakenttiä vaan muuttaa ne nolliksi
         if (et_Hours_Reaction.text.toString() == "") {

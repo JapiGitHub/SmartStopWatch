@@ -49,7 +49,7 @@ class RoundTimerActivity : AppCompatActivity() {
         // pitää portraittina!
         setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT)
 
-        findViewById(R.id.MainLinearLayoutRoundTimer).requestFocus()
+        MainLinearLayoutRoundTimer.requestFocus()
 
         butt_RoundTimerStart.onClick { StartButtonPress() }
 
@@ -66,7 +66,7 @@ class RoundTimerActivity : AppCompatActivity() {
             "Continue"  -> jatka()
         }
 
-        findViewById(R.id.MainLinearLayoutRoundTimer).requestFocus()
+        MainLinearLayoutRoundTimer.requestFocus()
 
 /*        //jos napissa lukee Start -> tee normaalisti
         if (butt_RoundTimerStart.text == "Start") {

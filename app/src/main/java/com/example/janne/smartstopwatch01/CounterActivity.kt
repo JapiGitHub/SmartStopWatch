@@ -105,7 +105,8 @@ class CounterActivity : AppCompatActivity() {
         }
 
 
-        sb_Threshold = findViewById(R.id.sb_Threshold) as SeekBar
+        //sbThreshold = findViewById<SeekBar>(R.id.sb_Threshold)
+        sb_Threshold = findViewById<SeekBar>(R.id.sb_Threshold)
         sb_Threshold.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
             override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {
                 threshold = sb_Threshold.progress
@@ -116,7 +117,7 @@ class CounterActivity : AppCompatActivity() {
             override fun onStopTrackingTouch(seekBar: SeekBar?) {}
         })
 
-        sb_waitNextHit = findViewById(R.id.sb_waitNextHit) as SeekBar
+        sb_waitNextHit = findViewById<SeekBar>(R.id.sb_waitNextHit)
         sb_waitNextHit.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener{
             override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {
                 println("KONSOLI   : seekbar : ${sb_waitNextHit.progress}")
@@ -132,8 +133,7 @@ class CounterActivity : AppCompatActivity() {
 
 
 
-        //graph <
-        var graphview : GraphView = findViewById(R.id.graph) as GraphView
+        var graphview = findViewById<GraphView>(R.id.graph)
 
         series = LineGraphSeries<DataPoint>()
         seriesHITs = PointsGraphSeries<DataPoint>()

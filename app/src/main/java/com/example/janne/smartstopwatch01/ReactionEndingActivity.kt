@@ -47,9 +47,8 @@ class ReactionEndingActivity : AppCompatActivity() {
 
 
         //graph
-        var yourProgressReactionRE : GraphView = findViewById(R.id.graph_HistoryRE) as GraphView
-        var ThisSessionRE : GraphView = findViewById(R.id.graph_ThisSession) as GraphView
-
+        var yourProgressReactionRE = findViewById<GraphView>(R.id.graph_HistoryRE)
+        var ThisSessionRE  = findViewById<GraphView>(R.id.graph_ThisSession)
 
         /*
 

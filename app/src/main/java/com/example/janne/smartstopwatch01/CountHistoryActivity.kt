@@ -32,7 +32,7 @@ class CountHistoryActivity : AppCompatActivity() {
 
         supportActionBar!!.hide()
 
-        var yourProgressCount: GraphView = findViewById(R.id.CountHistoryGraph) as GraphView
+        var yourProgressCount = findViewById<GraphView>(R.id.CountHistoryGraph)
         seriesCountScore = LineGraphSeries<DataPoint>()
 
 

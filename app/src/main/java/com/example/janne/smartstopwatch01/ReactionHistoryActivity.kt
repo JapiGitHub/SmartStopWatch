@@ -32,7 +32,7 @@ class ReactionHistoryActivity : AppCompatActivity() {
         supportActionBar!!.hide()
 
         //graph
-        var yourProgressReaction : GraphView = findViewById(R.id.yourProgressReaction) as GraphView
+        var yourProgressReaction = findViewById<GraphView>(R.id.yourProgressReaction)
         seriesReactionScore = LineGraphSeries<DataPoint>()
 
 
