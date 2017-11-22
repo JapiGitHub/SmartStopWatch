@@ -1,6 +1,7 @@
 package com.example.janne.smartstopwatch01
 
 import android.content.Context
+import android.content.Intent
 import android.graphics.Color
 import android.support.v7.app.AppCompatActivity
 import android.os.Bundle
@@ -118,5 +119,13 @@ class CountHistoryActivity : AppCompatActivity() {
 
     }
 
+
+    override fun onBackPressed() {
+        super.onBackPressed()
+
+        startActivity(Intent(this@CountHistoryActivity, MainMenuActivity::class.java))
+        finish()
+
+    }
 
 }

@@ -1,6 +1,7 @@
 package com.example.janne.smartstopwatch01
 
 import android.content.Context
+import android.content.Intent
 import android.graphics.Color
 import android.support.v7.app.AppCompatActivity
 import android.os.Bundle
@@ -12,6 +13,8 @@ import com.jjoe64.graphview.series.DataPoint
 import com.jjoe64.graphview.series.LineGraphSeries
 
 import kotlinx.android.synthetic.main.activity_reaction_history.*
+import org.jetbrains.anko.sdk25.coroutines.onClick
+import org.jetbrains.anko.toast
 import java.io.*
 
 class ReactionHistoryActivity : AppCompatActivity() {
@@ -54,6 +57,8 @@ class ReactionHistoryActivity : AppCompatActivity() {
 
         readLines()
 
+        butt_ResetHistory_RH.onClick { resetReactionHistory() }
+
     }
 
 
@@ -78,6 +83,22 @@ class ReactionHistoryActivity : AppCompatActivity() {
 
     }*/
 
+private fun resetReactionHistory() {
+    val ScoreToFile : String = "0"
+    try {
+        val fileOutputStream = openFileOutput("score_reaction.txt", Context.MODE_PRIVATE)    // MODE_APPEND lisää tiedoston perään
+        fileOutputStream.write(ScoreToFile.toByteArray())
+        fileOutputStream.close()
+
+        runOnUiThread { toast("Your reaction score was reseted") }
+
+        // throws
+    } catch (e: FileNotFoundException) {
+        e.printStackTrace()
+    } catch (e: IOException) {
+        e.printStackTrace()
+    }
+}
 
     private fun readLines () {
 
@@ -102,6 +123,14 @@ class ReactionHistoryActivity : AppCompatActivity() {
 
         yourProgressReaction.addSeries(seriesReactionScore)
 
+
+    }
+
+    override fun onBackPressed() {
+        super.onBackPressed()
+
+        startActivity(Intent(this@ReactionHistoryActivity, MainMenuActivity::class.java))
+        finish()
 
     }
 

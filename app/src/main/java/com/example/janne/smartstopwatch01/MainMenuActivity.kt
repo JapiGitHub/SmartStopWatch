@@ -4,6 +4,7 @@ import android.Manifest
 import android.content.Intent
 import android.content.pm.ActivityInfo
 import android.content.pm.PackageManager
+import android.graphics.Color
 import android.os.Bundle
 import android.support.v4.app.ActivityCompat
 import android.support.v7.app.AppCompatActivity
@@ -11,6 +12,9 @@ import android.view.*
 import android.view.Window
 import android.view.WindowManager
 import android.widget.Button
+import com.google.android.gms.ads.AdRequest
+import com.google.android.gms.ads.AdView
+import com.google.android.gms.ads.MobileAds
 import org.jetbrains.anko.button
 import org.jetbrains.anko.editText
 import org.jetbrains.anko.sdk25.coroutines.onClick
@@ -72,6 +76,12 @@ class MainMenuActivity : AppCompatActivity() {
         //permissions
         ActivityCompat.requestPermissions(this, permissions, REQUEST_RECORD_AUDIO_PERMISSION)
 
+        //AdMob
+        MobileAds.initialize(this, "ca-app-pub-3940256099942544~3347511713")
+        var mAdView = findViewById<AdView>(R.id.adViewTestii)
+        val adRequesti = AdRequest.Builder().addTestDevice(AdRequest.DEVICE_ID_EMULATOR).build()
+        mAdView.loadAd(adRequesti)
+
 
         //buttons
 
@@ -85,13 +95,11 @@ class MainMenuActivity : AppCompatActivity() {
         //butt_stop.onClick { stopStpWatch() }
         butt_reset.onClick { Reset() }
 
-        tv_BasicStopwatch.text = "0:0:0:000"
-
-
+        tv_BasicStopwatch.text = "0:0:0:0"
     }
 
 
-    fun startStpWatch() {
+    private fun startStpWatch() {
 
         if (butt_start.text == "PAUSE") { stopStpWatch() }
             else {
@@ -114,12 +122,10 @@ class MainMenuActivity : AppCompatActivity() {
 
             butt_start.text = "PAUSE"
         }
-
-
     }
 
 
-    fun updateTimes() {
+    private fun updateTimes() {
 
         aikaTekstiksi = System.currentTimeMillis() - (startTime + pauseTimeResult)
 
@@ -136,7 +142,7 @@ class MainMenuActivity : AppCompatActivity() {
         updateTimes()
 
         if (stpWtchIsRunning) {
-            runOnUiThread { tv_BasicStopwatch.text = "$hours:$minutes:$seconds:$millis" }
+            runOnUiThread { tv_BasicStopwatch.text = "$hours:$minutes:$seconds:${millis/100}" }
         }
 
         //jatkaa päivittämistä 50ms välein
@@ -197,10 +203,9 @@ class MainMenuActivity : AppCompatActivity() {
         aikaTekstiksi = 0
 
         runOnUiThread {
-            tv_BasicStopwatch.text = "0:0:0:000"
+            tv_BasicStopwatch.text = "0:0:0:0"
             butt_start.text = "START"
         }
-
     }
 
 

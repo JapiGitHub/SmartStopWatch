@@ -2,6 +2,7 @@ package com.example.janne.smartstopwatch01
 
 import android.Manifest
 import android.content.Context
+import android.content.Intent
 import android.content.pm.ActivityInfo
 import android.content.pm.PackageManager
 import android.graphics.Color
@@ -11,6 +12,7 @@ import android.media.MediaRecorder
 import android.os.Bundle
 import android.support.v4.app.ActivityCompat
 import android.support.v7.app.AppCompatActivity
+import android.view.Gravity
 import android.view.Window
 import android.view.WindowManager
 import android.widget.SeekBar
@@ -19,6 +21,7 @@ import com.jjoe64.graphview.series.DataPoint
 import com.jjoe64.graphview.series.LineGraphSeries
 import com.jjoe64.graphview.series.PointsGraphSeries
 import kotlinx.android.synthetic.main.activity_counter.*
+import me.toptas.fancyshowcase.FancyShowCaseView
 import org.jetbrains.anko.sdk25.coroutines.onClick
 import org.jetbrains.anko.toast
 import java.io.FileNotFoundException
@@ -47,7 +50,7 @@ class CounterActivity : AppCompatActivity() {
     //graph
     lateinit var series: LineGraphSeries<DataPoint>
     lateinit var seriesHITs: PointsGraphSeries<DataPoint>
-    lateinit var thresholdLineinGraph : LineGraphSeries<DataPoint>
+    lateinit var thresholdLineinGraph : PointsGraphSeries<DataPoint>
     var Xline : Double = 0.0
     var Yline : Double = 0.0
     var x : Double = 0.0
@@ -137,13 +140,14 @@ class CounterActivity : AppCompatActivity() {
 
         series = LineGraphSeries<DataPoint>()
         seriesHITs = PointsGraphSeries<DataPoint>()
-        thresholdLineinGraph = LineGraphSeries<DataPoint>()
+
+        //thresholdLineinGraph = LineGraphSeries<DataPoint>()
+        thresholdLineinGraph = PointsGraphSeries<DataPoint>()
 
         //threshold line   #a1a193      btw. se tummempi väri on #5b605f
         val ThresholdColorOrange = Color.argb(200,255,102,0)
         thresholdLineinGraph.color = ThresholdColorOrange
-        thresholdLineinGraph.thickness = 7
-
+        thresholdLineinGraph.size = 7f
 
         series.color = Color.TRANSPARENT
         series.isDrawBackground = true
@@ -227,8 +231,11 @@ class CounterActivity : AppCompatActivity() {
                     x = x + 1
                     series.appendData(DataPoint(x, ViimeisinMaxAmplitude), true, 50)
 
-                    Yline = thresholdDouble
-                    thresholdLineinGraph.appendData(DataPoint(x, Yline), true, 50)
+                    if ((x.toInt() % 3) == 0) {
+                        Yline = thresholdDouble
+                        thresholdLineinGraph.appendData(DataPoint(x, Yline), true, 50)
+                    }
+
 
 
                     //tämä tarvii olla jottei kaadu heti 50x mittauksen jälkeen...
@@ -267,6 +274,14 @@ class CounterActivity : AppCompatActivity() {
 
     println("KONSOLI   : phase final")
 
+        FancyShowCaseView.Builder(this)
+                .focusOn(sb_Threshold)
+                .title("Just set Threshold / sound limit \n \n app counts every count that exceeds that limit")
+                .titleStyle(R.style.fancyshowcasestyle, Gravity.TOP or Gravity.CENTER)
+                //.showOnce("fancy1")
+                .build()
+                .show()
+
     }
 
 
@@ -295,6 +310,15 @@ class CounterActivity : AppCompatActivity() {
         } catch (e: IOException) {
             e.printStackTrace()
         }
+
+
+        thread?.interrupt()
+        audioRec!!.stop()
+        audioRec!!.release()
+        audioRec = null
+        startActivity(Intent(this@CounterActivity, MainMenuActivity::class.java))
+        finish()
+
     }
 
     //onResume alkaa aina onCreaten (tai onStartin) jälkeen ja lisäksi onPausen jälkeen.
@@ -576,6 +600,18 @@ class CounterActivity : AppCompatActivity() {
             }
         }*/
 
+
+    }
+
+    override fun onBackPressed() {
+        super.onBackPressed()
+
+        thread?.interrupt()
+        audioRec!!.stop()
+        audioRec!!.release()
+        audioRec = null
+        startActivity(Intent(this@CounterActivity, MainMenuActivity::class.java))
+        finish()
 
     }
 

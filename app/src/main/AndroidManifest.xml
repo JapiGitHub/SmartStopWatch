@@ -34,6 +34,7 @@
                   android:noHistory="true">
         </activity>
         <activity android:name=".CounterActivity"
+                  android:noHistory="true"
                   android:screenOrientation="sensorPortrait"
                   android:configChanges="keyboardHidden|orientation|screenSize">
         </activity>

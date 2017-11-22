@@ -1,5 +1,6 @@
 package com.example.janne.smartstopwatch01
 
+import android.content.Intent
 import android.content.pm.ActivityInfo
 import android.media.MediaPlayer
 import android.support.v7.app.AppCompatActivity
@@ -155,7 +156,7 @@ class RoundTimerActivity : AppCompatActivity() {
                 override fun onTick(millisUntilFinished: Long) {
 
                     aikaTekstiksi = millisUntilFinished
-                    millis = (aikaTekstiksi.toInt() % 1000)
+                    millis = (aikaTekstiksi.toInt() % 1000) / 100
                     seconds = (aikaTekstiksi.toInt() / 1000) % 60
                     minutes = (aikaTekstiksi.toInt() / 60000) % 60
                     hours = (aikaTekstiksi.toInt() / 3600000) % 60
@@ -221,7 +222,7 @@ class RoundTimerActivity : AppCompatActivity() {
                         override fun onTick(millisUntilFinished: Long) {
 
                             aikaTekstiksi = millisUntilFinished
-                            millis = (aikaTekstiksi.toInt() % 1000)
+                            millis = (aikaTekstiksi.toInt() % 1000) / 100
                             seconds = (aikaTekstiksi.toInt() / 1000) % 60
                             minutes = (aikaTekstiksi.toInt() / 60000) % 60
                             hours = (aikaTekstiksi.toInt() / 3600000) % 60
@@ -245,6 +246,14 @@ class RoundTimerActivity : AppCompatActivity() {
 
             }}, RoundStartsIn)
         // tv_RoundTimer.postDelayed(Runnable { updateTime() }, 50)
+    }
+
+    override fun onBackPressed() {
+        super.onBackPressed()
+
+        startActivity(Intent(this@RoundTimerActivity, MainMenuActivity::class.java))
+        finish()
+
     }
 
 
