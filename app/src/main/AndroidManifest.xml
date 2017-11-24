@@ -46,8 +46,6 @@
         </activity>
         <activity android:name=".stopWatchTest">
         </activity>
-        <activity android:name=".chronoTest">
-        </activity>
         <activity android:name=".RoundTimerActivity">
         </activity>
         <activity android:name=".ReactionEndingActivity">

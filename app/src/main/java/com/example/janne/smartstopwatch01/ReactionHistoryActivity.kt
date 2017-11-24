@@ -44,6 +44,10 @@ class ReactionHistoryActivity : AppCompatActivity() {
         val graphColorBluish = Color.argb(200, 161, 161, 147)
         seriesReactionScore.backgroundColor = graphColorBluish
 
+        //miksei näy pallot?
+        seriesReactionScore.isDrawDataPoints = true
+        seriesReactionScore.dataPointsRadius = 3f
+
 
         yourProgressReaction.gridLabelRenderer.isVerticalLabelsVisible = true
         yourProgressReaction.gridLabelRenderer.isHorizontalLabelsVisible = false

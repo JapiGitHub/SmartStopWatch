@@ -50,7 +50,7 @@ class CounterActivity : AppCompatActivity() {
     //graph
     lateinit var series: LineGraphSeries<DataPoint>
     lateinit var seriesHITs: PointsGraphSeries<DataPoint>
-    lateinit var thresholdLineinGraph : PointsGraphSeries<DataPoint>
+    lateinit var thresholdLineinGraph : LineGraphSeries<DataPoint>
     var Xline : Double = 0.0
     var Yline : Double = 0.0
     var x : Double = 0.0
@@ -142,12 +142,11 @@ class CounterActivity : AppCompatActivity() {
         seriesHITs = PointsGraphSeries<DataPoint>()
 
         //thresholdLineinGraph = LineGraphSeries<DataPoint>()
-        thresholdLineinGraph = PointsGraphSeries<DataPoint>()
+        thresholdLineinGraph = LineGraphSeries<DataPoint>()
 
         //threshold line   #a1a193      btw. se tummempi väri on #5b605f
         val ThresholdColorOrange = Color.argb(200,255,102,0)
         thresholdLineinGraph.color = ThresholdColorOrange
-        thresholdLineinGraph.size = 7f
 
         series.color = Color.TRANSPARENT
         series.isDrawBackground = true

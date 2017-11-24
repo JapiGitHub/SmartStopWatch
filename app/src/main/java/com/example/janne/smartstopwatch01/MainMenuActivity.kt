@@ -77,18 +77,37 @@ class MainMenuActivity : AppCompatActivity() {
         ActivityCompat.requestPermissions(this, permissions, REQUEST_RECORD_AUDIO_PERMISSION)
 
         //AdMob
-        MobileAds.initialize(this, "ca-app-pub-3940256099942544~3347511713")
-        var mAdView = findViewById<AdView>(R.id.adViewTestii)
-        val adRequesti = AdRequest.Builder().addTestDevice(AdRequest.DEVICE_ID_EMULATOR).build()
-        mAdView.loadAd(adRequesti)
-
+            if (Constants.type === Constants.Type.FREE) {
+                MobileAds.initialize(this, "ca-app-pub-3940256099942544~3347511713")
+                var mAdView = findViewById<AdView>(R.id.adViewTestii)
+                val adRequesti = AdRequest.Builder().addTestDevice(AdRequest.DEVICE_ID_EMULATOR).build()
+                mAdView.loadAd(adRequesti)
+            }
 
         //buttons
 
         buttReaction.onClick                { startActivity(Intent(this@MainMenuActivity,ReactionActivity::class.java)) }
-        buttReactionHistory.onClick         { startActivity(Intent(this@MainMenuActivity,ReactionHistoryActivity::class.java)) }
+
+        buttReactionHistory.onClick         {
+            if (Constants.type === Constants.Type.FREE)
+            {
+                runOnUiThread { toast("Buy the PRO version to see your history") }
+            } else {
+                startActivity(Intent(this@MainMenuActivity,ReactionHistoryActivity::class.java))
+            }
+        }
+
         buttCountREPs.onClick               { startActivity(Intent(this@MainMenuActivity,CounterActivity::class.java)) }
-        buttCountHistory.onClick            { startActivity(Intent(this@MainMenuActivity,CountHistoryActivity::class.java)) }
+
+        buttCountHistory.onClick            {
+            if (Constants.type === Constants.Type.FREE)
+            {
+                runOnUiThread { toast("Buy the PRO version to see your history") }
+            } else {
+                startActivity(Intent(this@MainMenuActivity,CountHistoryActivity::class.java))
+            }
+        }
+
         buttSettings.onClick                { startActivity(Intent(this@MainMenuActivity,RoundTimerActivity::class.java)) }
 
         butt_start.onClick { startStpWatch() }
