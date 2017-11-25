@@ -15,12 +15,9 @@ import android.widget.Button
 import com.google.android.gms.ads.AdRequest
 import com.google.android.gms.ads.AdView
 import com.google.android.gms.ads.MobileAds
-import org.jetbrains.anko.button
-import org.jetbrains.anko.editText
 import org.jetbrains.anko.sdk25.coroutines.onClick
-import org.jetbrains.anko.toast
-import org.jetbrains.anko.verticalLayout
 import kotlinx.android.synthetic.main.activity_main_menu.*
+import org.jetbrains.anko.*
 
 class MainMenuActivity : AppCompatActivity() {
 
@@ -86,9 +83,13 @@ class MainMenuActivity : AppCompatActivity() {
 
         //buttons
 
-        buttReaction.onClick                { startActivity(Intent(this@MainMenuActivity,ReactionActivity::class.java)) }
+        buttReaction.onClick                {
+            buttReaction.backgroundResource = R.drawable.roundedbuttonsorange
+            startActivity(Intent(this@MainMenuActivity,ReactionActivity::class.java))
+            }
 
         buttReactionHistory.onClick         {
+            buttReactionHistory.backgroundResource = R.drawable.roundedbuttonsorange
             if (Constants.type === Constants.Type.FREE)
             {
                 runOnUiThread { toast("Buy the PRO version to see your history") }
@@ -97,9 +98,13 @@ class MainMenuActivity : AppCompatActivity() {
             }
         }
 
-        buttCountREPs.onClick               { startActivity(Intent(this@MainMenuActivity,CounterActivity::class.java)) }
+        buttCountREPs.onClick               {
+            buttCountREPs.backgroundResource = R.drawable.roundedbuttonsorange
+            startActivity(Intent(this@MainMenuActivity,CounterActivity::class.java))
+        }
 
         buttCountHistory.onClick            {
+            buttCountHistory.backgroundResource = R.drawable.roundedbuttonsorange
             if (Constants.type === Constants.Type.FREE)
             {
                 runOnUiThread { toast("Buy the PRO version to see your history") }
@@ -108,11 +113,23 @@ class MainMenuActivity : AppCompatActivity() {
             }
         }
 
-        buttSettings.onClick                { startActivity(Intent(this@MainMenuActivity,RoundTimerActivity::class.java)) }
+        buttRoundTimer.onClick                {
+            buttRoundTimer.backgroundResource = R.drawable.roundedbuttonsorange
+            startActivity(Intent(this@MainMenuActivity,RoundTimerActivity::class.java)) }
 
-        butt_start.onClick { startStpWatch() }
+        butt_start.onClick {
+            butt_start.backgroundResource = R.drawable.roundedbuttonsorange
+            if (butt_start.text == "PAUSE") {
+                butt_start.backgroundResource = R.drawable.roundedbuttons
+            }
+            startStpWatch()
+
+        }
         //butt_stop.onClick { stopStpWatch() }
-        butt_reset.onClick { Reset() }
+        butt_reset.onClick {
+            Reset()
+            butt_start.backgroundResource = R.drawable.roundedbuttons
+        }
 
         tv_BasicStopwatch.text = "0:0:0:0"
     }
@@ -120,7 +137,10 @@ class MainMenuActivity : AppCompatActivity() {
 
     private fun startStpWatch() {
 
-        if (butt_start.text == "PAUSE") { stopStpWatch() }
+        if (butt_start.text == "PAUSE") {
+            stopStpWatch()
+            runOnUiThread { butt_start.backgroundResource = R.drawable.roundedbuttons }
+        }
             else {
             stpWtchIsRunning = true
 

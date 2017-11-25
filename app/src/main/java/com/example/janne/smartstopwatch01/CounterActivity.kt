@@ -225,7 +225,7 @@ class CounterActivity : AppCompatActivity() {
                     runOnUiThread { tv_info.text ="max : $maxAmpEver" }
                 }*/
 
-                println("KONSOLI   :   phase 2")
+
                 runOnUiThread {
                     x = x + 1
                     series.appendData(DataPoint(x, ViimeisinMaxAmplitude), true, 50)
@@ -619,7 +619,7 @@ class CounterActivity : AppCompatActivity() {
     companion object {
 
         private var sampleRate = 8000
-        private val SAMPLE_DELAY = 90
+        private val SAMPLE_DELAY = 50
 
         //private val LOG_TAG = "AudioRecordTest"
         val REQUEST_RECORD_AUDIO_PERMISSION = 200

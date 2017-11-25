@@ -62,6 +62,7 @@ class ReactionActivity : AppCompatActivity() {
     //graph
     lateinit private var series: LineGraphSeries<DataPoint>
     lateinit private var seriesHITs: PointsGraphSeries<DataPoint>
+    lateinit private var seriesHITsShadow: PointsGraphSeries<DataPoint>
     lateinit private var thresholdLineinGraph : LineGraphSeries<DataPoint>
     lateinit private var seriesReaction: LineGraphSeries<DataPoint>
     lateinit private var seriesHardReset: PointsGraphSeries<DataPoint>
@@ -139,6 +140,8 @@ class ReactionActivity : AppCompatActivity() {
 
         MainLinearLayout.requestFocus()
 
+        tv_Wait.visibility = View.GONE
+
         //buffersize determination
         for (rate in intArrayOf(44100, 22050, 11025, 16000, 8000)) {  // add the rates you wish to check against
             bufferSize = AudioRecord.getMinBufferSize(rate, AudioFormat.CHANNEL_IN_MONO, AudioFormat.ENCODING_PCM_16BIT)
@@ -181,13 +184,23 @@ class ReactionActivity : AppCompatActivity() {
         //ääni graafit
             series = LineGraphSeries<DataPoint>()
             seriesHITs = PointsGraphSeries<DataPoint>()
+                seriesHITsShadow = PointsGraphSeries<DataPoint>()
             thresholdLineinGraph = LineGraphSeries<DataPoint>()
             seriesHardReset = PointsGraphSeries<DataPoint>()
 
-            seriesHardReset.color = Color.RED
-            seriesHITs.color = Color.RED
-            seriesHardReset.size = 50f
-            seriesHITs.size = 50f
+
+            //threshold line   #a1a193      btw. se tummempi väri on #5b605f
+            val ThresholdColorOrange = Color.argb(255,255,102,0)
+            val OrangeShadow = Color.argb(140,255,161,99)
+            thresholdLineinGraph.color = ThresholdColorOrange
+            thresholdLineinGraph.thickness = 7
+
+            seriesHardReset.color = ThresholdColorOrange
+            seriesHITs.color = ThresholdColorOrange
+                seriesHITsShadow.color = OrangeShadow
+            seriesHITs.size = 20f
+                seriesHITsShadow.size = 50f
+            seriesHardReset.size = 40f
 
             series.thickness = 2
 
@@ -197,10 +210,9 @@ class ReactionActivity : AppCompatActivity() {
             series.backgroundColor = graphColorBluish
 
 
-            //threshold line   #a1a193      btw. se tummempi väri on #5b605f
-            val ThresholdColorOrange = Color.argb(200,255,102,0)
-            thresholdLineinGraph.color = ThresholdColorOrange
-            thresholdLineinGraph.thickness = 7
+
+
+
 
             graph.gridLabelRenderer.isVerticalLabelsVisible = false
             graph.gridLabelRenderer.isHorizontalLabelsVisible = false
@@ -284,6 +296,7 @@ println("KONSOLI   : viimeisin max AMP   :   $ViimeisinMaxAmplitude")
                         graph.removeAllSeries()
                         graph.addSeries(series)
                         graph.addSeries(seriesHITs)
+                            graph.addSeries(seriesHITsShadow)
                         graph.addSeries(thresholdLineinGraph)
 
 /*                        if (x.toInt() % 100 == 1) {
@@ -511,6 +524,8 @@ println("KONSOLI   : viimeisin max AMP   :   $ViimeisinMaxAmplitude")
 
     private fun aloita() {
 
+        tv_Wait.visibility = View.VISIBLE
+
         // jos focus on stopwatchissa niin heittää näppiksen alas ja ottaa myöhemmin focuksen pois
         if (et_Minutes_reaction.isFocused || et_Hours_Reaction.isFocused || et_Seconds_Reaction.isFocused || et_Millis_Reaction.isFocused  ) {
             //tiputtaa näppiksen pois jos vahingossa on jäänyt päälle
@@ -707,6 +722,7 @@ println("KONSOLI   : viimeisin max AMP   :   $ViimeisinMaxAmplitude")
                     graph.removeAllSeries()
                     graph.addSeries(series)
                     graph.addSeries(seriesHITs)
+                        graph.addSeries(seriesHITsShadow)
                     graph.addSeries(thresholdLineinGraph)
                 }
 
@@ -822,13 +838,15 @@ println("KONSOLI   : viimeisin max AMP   :   $ViimeisinMaxAmplitude")
             //jottei HIT punainen pallo mene chartista yli...
             if (ViimeisinMaxAmplitude > 29000) {
                 seriesHITs.appendData(DataPoint(x, 29000.0), true, 50)
+                seriesHITsShadow.appendData(DataPoint(x, 29000.0), true, 50)
             } else {
                 seriesHITs.appendData(DataPoint(x, ViimeisinMaxAmplitude), true, 50)
+                seriesHITsShadow.appendData(DataPoint(x, ViimeisinMaxAmplitude), true, 50)
             }
 
 
             //lisää datan Reaction seriekseen eli alempaan graafiin
-            seriesReaction.appendData(DataPoint(xReaction, ReactionResultTIME.toDouble()), true, 50)
+            //seriesReaction.appendData(DataPoint(xReaction, ReactionResultTIME.toDouble()), true, 50)
 
             //tämä tarvii olla jottei kaadu heti 50x mittauksen jälkeen... vai 25x?
             if (xReaction.toInt() % 50 == 1) {

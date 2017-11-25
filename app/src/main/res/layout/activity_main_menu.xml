@@ -28,7 +28,7 @@
             android:id="@+id/butt_start" app:layout_constraintTop_toTopOf="parent"
             android:layout_marginTop="24dp" android:layout_marginLeft="24dp" app:layout_constraintLeft_toLeftOf="parent"
             android:textColor="#5b605f" android:fontFamily="sans-serif-condensed" android:textSize="30sp"
-            android:textAllCaps="false"/>
+            android:textAllCaps="false" android:layout_marginStart="24dp"/>
     <Button
             android:text="reset"
             android:background="@drawable/roundedbuttons"
@@ -39,142 +39,137 @@
             android:textAppearance="@style/TextAppearance.AppCompat.Small" android:textSize="30sp"
             android:fontFamily="sans-serif-condensed" android:textColor="#5b605f"
             android:layout_marginRight="24dp" app:layout_constraintRight_toRightOf="parent"
-            android:textAllCaps="false"/>
-    <com.google.android.gms.ads.AdView
-            xmlns:ads="http://schemas.android.com/apk/res-auto"
-            android:id="@+id/adViewTestii"
-            ads:adSize="BANNER"
-            ads:adUnitId="ca-app-pub-3940256099942544/6300978111"
-            android:layout_centerHorizontal="true"
-            android:layout_alignParentBottom="true"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            ads:layout_constraintBottom_toBottomOf="parent"
-            android:layout_marginBottom="8dp" android:layout_marginRight="8dp"
-            ads:layout_constraintRight_toRightOf="parent" android:layout_marginLeft="8dp"
-            ads:layout_constraintLeft_toLeftOf="parent">
-    </com.google.android.gms.ads.AdView>
+            android:textAllCaps="false" android:layout_marginEnd="24dp"/>
 
-    <ScrollView android:layout_width="0dp" android:layout_height="0dp"
-                android:layout_marginRight="8dp" app:layout_constraintRight_toRightOf="parent"
-                android:layout_marginLeft="8dp" app:layout_constraintLeft_toLeftOf="parent"
-                android:layout_marginStart="8dp" android:layout_marginEnd="8dp" android:id="@+id/scrollView4"
-                android:layout_marginTop="8dp" app:layout_constraintTop_toBottomOf="@+id/tv_BasicStopwatch"
-                app:layout_constraintBottom_toTopOf="@id/adViewTestii">
+    <FrameLayout
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            app:layout_constraintBottom_toBottomOf="parent" android:layout_marginBottom="8dp"
+            android:layout_marginRight="8dp" app:layout_constraintRight_toRightOf="parent"
+            android:layout_marginLeft="8dp" app:layout_constraintLeft_toLeftOf="parent"
+            android:layout_marginTop="8dp" app:layout_constraintTop_toBottomOf="@+id/tv_BasicStopwatch"
+    android:paddingBottom="10dp">
 
-        <LinearLayout android:layout_width="match_parent" android:layout_height="match_parent"
-        android:orientation="vertical"
-       >
-            <Button
-                    android:text="Reaction Timer"
-                    android:layout_gravity="center_horizontal"
-                    android:background="@drawable/roundedbuttons"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:id="@+id/buttReaction" android:layout_marginRight="8dp"
-                    app:layout_constraintRight_toRightOf="parent" android:layout_marginLeft="8dp"
-                    app:layout_constraintLeft_toLeftOf="parent"
-                    android:layout_marginTop="16dp" app:layout_constraintTop_toBottomOf="@+id/tv_BasicStopwatch"
-                    android:textAppearance="@style/TextAppearance.AppCompat.Small" android:textSize="39sp"
-                    android:fontFamily="sans-serif-condensed" app:layout_constraintHorizontal_bias="0.507"
-                    android:textColor="#5b605f"/>
-            <Button
-                    android:layout_gravity="center_horizontal"
-                    android:text="Your progress"
-                    android:background="@drawable/roundedbuttons"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:id="@+id/buttReactionHistory"
-                    android:layout_marginRight="8dp"
-                    app:layout_constraintRight_toRightOf="parent" android:layout_marginLeft="8dp"
-                    app:layout_constraintLeft_toLeftOf="parent" android:layout_marginTop="5dp"
-                    app:layout_constraintTop_toBottomOf="@+id/buttReaction"
-                    android:textAppearance="@style/TextAppearance.AppCompat.Small" android:textSize="20sp"
-                    android:fontFamily="sans-serif-condensed" android:textColor="#464646"/>
-            <Button
-                    android:layout_gravity="center_horizontal"
-                    android:text="Count REPs"
-                    android:background="@drawable/roundedbuttons"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:id="@+id/buttCountREPs"
-                    android:layout_marginRight="8dp"
-                    app:layout_constraintRight_toRightOf="parent" android:layout_marginLeft="8dp"
-                    app:layout_constraintLeft_toLeftOf="parent" app:layout_constraintHorizontal_bias="0.503"
-                    android:layout_marginTop="25dp" app:layout_constraintTop_toBottomOf="@+id/buttReactionHistory"
-                    android:textAppearance="@style/TextAppearance.AppCompat.Small" android:textSize="39sp"
-                    android:fontFamily="sans-serif-condensed" android:textColor="#5b605f"/>
-            <Button
-                    android:layout_gravity="center_horizontal"
-                    android:text="Your progress"
-                    android:background="@drawable/roundedbuttons"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content" android:id="@+id/buttCountHistory"
-                    android:layout_marginRight="8dp"
-                    app:layout_constraintRight_toRightOf="parent" android:layout_marginLeft="8dp"
-                    app:layout_constraintLeft_toLeftOf="parent" android:layout_marginTop="5dp"
-                    app:layout_constraintTop_toBottomOf="@+id/buttCountREPs"
-                    android:textAppearance="@style/TextAppearance.AppCompat.Small" android:textSize="20sp"
-                    android:fontFamily="sans-serif-condensed" android:textColor="#464646"/>
-            <Button
-                    android:layout_gravity="center_horizontal"
-                    android:text="Round Timer"
-                    android:background="@drawable/roundedbuttons"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:id="@+id/buttSettings"
-                    android:layout_marginTop="25dp"
-                    app:layout_constraintTop_toBottomOf="@+id/buttCountHistory"
-                    android:layout_marginRight="8dp"
-                    app:layout_constraintRight_toRightOf="parent"
-                    android:textAppearance="@style/TextAppearance.AppCompat.Small"
-                    android:textSize="39sp"
-                    android:fontFamily="sans-serif-condensed"
-                    android:layout_marginLeft="8dp"
-                    app:layout_constraintLeft_toLeftOf="parent" android:textColor="#5b605f"/>
-            <Button
-                    android:layout_gravity="center_horizontal"
-                    android:text="Button"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content" android:id="@+id/button2"/>
-            <Button
-                    android:layout_gravity="center_horizontal"
-                    android:text="Button"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content" android:id="@+id/button3"/>
-            <Button
-                    android:layout_gravity="center_horizontal"
-                    android:text="Button"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content" android:id="@+id/button4"/>
-            <Button
-                    android:text="Button"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content" android:id="@+id/button5"/>
-            <Button
-                    android:text="Button"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content" android:id="@+id/button6"/>
-        </LinearLayout>
+        <ScrollView android:layout_width="match_parent" android:layout_height="match_parent"
+                    android:layout_marginRight="8dp" app:layout_constraintRight_toRightOf="parent"
+                    android:layout_marginLeft="8dp" app:layout_constraintLeft_toLeftOf="parent"
+                    android:layout_marginStart="8dp" android:layout_marginEnd="8dp" android:id="@+id/scrollView4"
+                    android:layout_marginTop="8dp" app:layout_constraintTop_toBottomOf="@+id/tv_BasicStopwatch"
+        >
 
-    </ScrollView>
+            <LinearLayout android:layout_width="match_parent" android:layout_height="match_parent"
+                          android:orientation="vertical"
+            >
+                <Button
+                        android:text="Reaction Timer"
+                        android:layout_gravity="center_horizontal"
+                        android:background="@drawable/roundedbuttons"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:id="@+id/buttReaction" android:layout_marginRight="8dp"
+                        app:layout_constraintRight_toRightOf="parent" android:layout_marginLeft="8dp"
+                        app:layout_constraintLeft_toLeftOf="parent"
+                        android:layout_marginTop="16dp" app:layout_constraintTop_toBottomOf="@+id/tv_BasicStopwatch"
+                        android:textAppearance="@style/TextAppearance.AppCompat.Small" android:textSize="39sp"
+                        android:fontFamily="sans-serif-condensed" app:layout_constraintHorizontal_bias="0.507"
+                        android:textColor="#5b605f"/>
+                <Button
+                        android:layout_gravity="center_horizontal"
+                        android:text="Your progress"
+                        android:background="@drawable/roundedbuttons"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:id="@+id/buttReactionHistory"
+                        android:layout_marginRight="8dp"
+                        app:layout_constraintRight_toRightOf="parent" android:layout_marginLeft="8dp"
+                        app:layout_constraintLeft_toLeftOf="parent" android:layout_marginTop="5dp"
+                        app:layout_constraintTop_toBottomOf="@+id/buttReaction"
+                        android:textAppearance="@style/TextAppearance.AppCompat.Small" android:textSize="20sp"
+                        android:fontFamily="sans-serif-condensed" android:textColor="#5b605f"/>
+                <Button
+                        android:layout_gravity="center_horizontal"
+                        android:text="Count REPs"
+                        android:background="@drawable/roundedbuttons"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:id="@+id/buttCountREPs"
+                        android:layout_marginRight="8dp"
+                        app:layout_constraintRight_toRightOf="parent" android:layout_marginLeft="8dp"
+                        app:layout_constraintLeft_toLeftOf="parent" app:layout_constraintHorizontal_bias="0.503"
+                        android:layout_marginTop="25dp" app:layout_constraintTop_toBottomOf="@+id/buttReactionHistory"
+                        android:textAppearance="@style/TextAppearance.AppCompat.Small" android:textSize="39sp"
+                        android:fontFamily="sans-serif-condensed" android:textColor="#5b605f"/>
+                <Button
+                        android:layout_gravity="center_horizontal"
+                        android:text="Your progress"
+                        android:background="@drawable/roundedbuttons"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content" android:id="@+id/buttCountHistory"
+                        android:layout_marginRight="8dp"
+                        app:layout_constraintRight_toRightOf="parent" android:layout_marginLeft="8dp"
+                        app:layout_constraintLeft_toLeftOf="parent" android:layout_marginTop="5dp"
+                        app:layout_constraintTop_toBottomOf="@+id/buttCountREPs"
+                        android:textAppearance="@style/TextAppearance.AppCompat.Small" android:textSize="20sp"
+                        android:fontFamily="sans-serif-condensed" android:textColor="#5b605f"/>
+                <Button
+                        android:layout_gravity="center_horizontal"
+                        android:text="Round Timer"
+                        android:background="@drawable/roundedbuttons"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:id="@+id/buttRoundTimer"
+                        android:layout_marginTop="25dp"
+                        app:layout_constraintTop_toBottomOf="@+id/buttCountHistory"
+                        android:layout_marginRight="8dp"
+                        app:layout_constraintRight_toRightOf="parent"
+                        android:textAppearance="@style/TextAppearance.AppCompat.Small"
+                        android:textSize="39sp"
+                        android:fontFamily="sans-serif-condensed"
+                        android:layout_marginLeft="8dp"
+                        app:layout_constraintLeft_toLeftOf="parent" android:textColor="#5b605f"
+                        />
+                <TextView
+                        android:paddingTop="35dp"
+                        android:text="version: 0.9"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content" android:id="@+id/textView8" android:textColor="#5b605f"
+                        android:fontFamily="sans-serif-condensed" android:textSize="10sp         "/>
+            </LinearLayout>
+
+        </ScrollView>
+        <com.google.android.gms.ads.AdView
+                android:layout_gravity="bottom"
+                android:id="@+id/adViewTestii"
+                app:adSize="BANNER"
+                app:adUnitId="ca-app-pub-3940256099942544/6300978111"
+                android:layout_centerHorizontal="true"
+                android:layout_alignParentBottom="true"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                app:layout_constraintBottom_toBottomOf="parent"
+                android:layout_marginBottom="8dp" android:layout_marginRight="8dp"
+                app:layout_constraintRight_toRightOf="parent" android:layout_marginLeft="8dp"
+                app:layout_constraintLeft_toLeftOf="parent" android:layout_marginStart="8dp"
+                android:layout_marginEnd="8dp">
+        </com.google.android.gms.ads.AdView>
+    </FrameLayout>
 
 
-<!--
-    <com.google.android.gms.ads.AdView
-            xmlns:ads="http://schemas.android.com/apk/res-auto"
-            android:id="@+id/adViewTestii"
-            ads:adSize="BANNER"
-            ads:adUnitId="ca-app-pub-3940256099942544/6300978111"
-            android:layout_centerHorizontal="true"
-            android:layout_alignParentBottom="true"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            ads:layout_constraintBottom_toBottomOf="parent" android:layout_marginBottom="8dp"
-            android:layout_marginRight="8dp" ads:layout_constraintRight_toRightOf="parent"
-            android:layout_marginLeft="8dp" ads:layout_constraintLeft_toLeftOf="parent">
-    </com.google.android.gms.ads.AdView>
--->
+    <!--
+        <com.google.android.gms.ads.AdView
+                xmlns:ads="http://schemas.android.com/apk/res-auto"
+                android:id="@+id/adViewTestii"
+                ads:adSize="BANNER"
+                ads:adUnitId="ca-app-pub-3940256099942544/6300978111"
+                android:layout_centerHorizontal="true"
+                android:layout_alignParentBottom="true"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                ads:layout_constraintBottom_toBottomOf="parent" android:layout_marginBottom="8dp"
+                android:layout_marginRight="8dp" ads:layout_constraintRight_toRightOf="parent"
+                android:layout_marginLeft="8dp" ads:layout_constraintLeft_toLeftOf="parent">
+        </com.google.android.gms.ads.AdView>
+    -->
 
 
 </android.support.constraint.ConstraintLayout>
