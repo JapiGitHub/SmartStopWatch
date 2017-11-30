@@ -29,6 +29,7 @@ import com.jjoe64.graphview.series.LineGraphSeries
 import com.jjoe64.graphview.series.PointsGraphSeries
 import kotlinx.android.synthetic.main.activity_reaction_v2.*
 import me.toptas.fancyshowcase.FancyShowCaseView
+import org.jetbrains.anko.backgroundResource
 import org.jetbrains.anko.longToast
 import org.jetbrains.anko.sdk25.coroutines.onClick
 import org.jetbrains.anko.sdk25.coroutines.onFocusChange
@@ -41,7 +42,7 @@ import java.util.*
 
 class ReactionActivity : AppCompatActivity() {
 
-
+    private var CountIsOn = false
     private var count  : Int = 0
     private var audioRec: AudioRecord? = null
     private var bufferSize: Int = 0
@@ -172,7 +173,11 @@ class ReactionActivity : AppCompatActivity() {
 
         // NAPIT
         btn_ResetReaction.onClick        { resetProgress() }
-        btn_StartReaction.onClick              { aloita() }
+        btn_StartReaction.onClick              {
+            btn_StartReaction.backgroundResource = R.drawable.roundedbuttonsorange
+            CountIsOn = true
+            aloita()
+        }
 
 
         // GRAPHit  <
@@ -200,7 +205,7 @@ class ReactionActivity : AppCompatActivity() {
                 seriesHITsShadow.color = OrangeShadow
             seriesHITs.size = 20f
                 seriesHITsShadow.size = 50f
-            seriesHardReset.size = 40f
+            seriesHardReset.size = 20f
 
             series.thickness = 2
 
@@ -266,7 +271,7 @@ class ReactionActivity : AppCompatActivity() {
 
 
         println("KONSOLI   : Calibration Thread alkamassa")
-        CalibrationThread = Thread(Runnable {
+/*        CalibrationThread = Thread(Runnable {
             while (CalibrationThread != null && !CalibrationThread!!.isInterrupted && CalibrationInProgress == true) {
 
                //sleep  for SAMPLE_DELAY tutkimisen välissä
@@ -299,14 +304,14 @@ println("KONSOLI   : viimeisin max AMP   :   $ViimeisinMaxAmplitude")
                             graph.addSeries(seriesHITsShadow)
                         graph.addSeries(thresholdLineinGraph)
 
-/*                        if (x.toInt() % 100 == 1) {
+*//*                        if (x.toInt() % 100 == 1) {
                             println("KONSOLI   : ressetDATA")
                             println("KONSOLI   : ressetDATA")
 
                             series.resetData(arrayOf(DataPoint(x, 1.0)))
                             thresholdLineinGraph.resetData(arrayOf(DataPoint(x,thresholdDouble)))
 
-                        }*/
+                        }*//*
 
 
 
@@ -322,11 +327,11 @@ println("KONSOLI   : viimeisin max AMP   :   $ViimeisinMaxAmplitude")
 
         //runOnUiThread { longToast("Set THRESHOLD and push START" )}
 
-                CalibrationThread!!.start()
+                CalibrationThread!!.start()*/
 
        FancyShowCaseView.Builder(this)
-                .focusOn(sb_Threshold)
-                .title("App makes a BEEP and then starts counting your reaction time. \n \n Just set sound threshold so app knows how loud sounds count for!")
+                .focusOn(btn_StartReaction)
+                .title("\n \n \n Make noise as fast as you can when you hear BEEP! \nPlace phone mic near impact sound \n \nHit punching bag \nKick football \nClap your hands \nAnything that makes sound...")
                 .titleStyle(R.style.fancyshowcasestyle, Gravity.TOP or Gravity.CENTER)
                 //.showOnce("fancy1")
                 .build()
@@ -338,6 +343,8 @@ println("KONSOLI   : viimeisin max AMP   :   $ViimeisinMaxAmplitude")
                 .showOnce("fancy1")
                 .build()
                 .show()*/
+
+
 
     }
 
@@ -430,7 +437,7 @@ println("KONSOLI   : viimeisin max AMP   :   $ViimeisinMaxAmplitude")
 
 // tähän pitää saada seriesHITS reset!
 
-        CalibrationThread?.interrupt()
+        //CalibrationThread?.interrupt()
 
         RoundEnding = false
 
@@ -616,7 +623,7 @@ println("KONSOLI   : viimeisin max AMP   :   $ViimeisinMaxAmplitude")
         }
 
         // TYÖ  if CalibrationInProgress == true
-        CalibrationThread?.interrupt()
+        //CalibrationThread?.interrupt()
         CalibrationInProgress = false
 
 
@@ -813,11 +820,15 @@ println("KONSOLI   : viimeisin max AMP   :   $ViimeisinMaxAmplitude")
     private fun ReactionHitDetected() {
 
             //println("KONSOLI   : total:${Thread.activeCount()}  this.ID:${Thread.currentThread().id}  $SAMPLE_DELAY ms,  ${ViimeisinMaxAmplitude.toInt()} BING BING !!!!!")
-
+        if (CountIsOn) {
             runOnUiThread {
-                tv_info3.text = "That's a hit, wait for the next BEEP. Your Reaction was $ReactionResultTIME ms"
+                tv_info3.text = "Your Reaction was $ReactionResultTIME ms"
                 tv_Wait.visibility = View.VISIBLE
             }
+
+
+
+
 
             count = count + 1
             runOnUiThread { tv_Count.text = "Count : $count" }
@@ -872,7 +883,7 @@ println("KONSOLI   : viimeisin max AMP   :   $ViimeisinMaxAmplitude")
 
 
             aloita()
-
+    }
 
     }
 
@@ -973,7 +984,7 @@ println("KONSOLI   : viimeisin max AMP   :   $ViimeisinMaxAmplitude")
         super.onBackPressed()
 
         thread?.interrupt()
-        CalibrationThread!!.interrupt()
+        //CalibrationThread!!.interrupt()
         audioRec!!.stop()
         audioRec!!.release()
         audioRec = null

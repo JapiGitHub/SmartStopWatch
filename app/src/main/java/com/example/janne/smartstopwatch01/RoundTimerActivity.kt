@@ -13,6 +13,7 @@ import android.view.View
 import android.view.Window
 import android.view.WindowManager
 import android.widget.TextView
+import org.jetbrains.anko.backgroundResource
 import org.jetbrains.anko.longToast
 import org.jetbrains.anko.toast
 import java.util.*
@@ -152,6 +153,7 @@ class RoundTimerActivity : AppCompatActivity() {
 
     private fun jatka() {
         runOnUiThread {
+            butt_RoundTimerStart.backgroundResource = R.drawable.roundedbuttonsorange
             DownTimer = object : CountDownTimer(PauseMillisLeft, 10) {
                 override fun onTick(millisUntilFinished: Long) {
 
@@ -186,6 +188,8 @@ class RoundTimerActivity : AppCompatActivity() {
         //jos napissa on lukenut Pause
         runOnUiThread {
 
+            butt_RoundTimerStart.backgroundResource = R.drawable.roundedbuttons
+
             DownTimer?.cancel()
             PauseMillisLeft = ((hours * 3600000) + (minutes * 60000) + (seconds * 1000) + (millis)).toLong()
             butt_RoundTimerStart.text = "Continue"
@@ -193,6 +197,7 @@ class RoundTimerActivity : AppCompatActivity() {
     }
 
     private fun startti() {
+        butt_RoundTimerStart.backgroundResource = R.drawable.roundedbuttonsorange
         RoundStartsIn = et_RoundStartsIn_RoundTimer.text.toString().toLong() * 1000
 
         et_RoundStartsIn_RoundTimer.visibility = View.GONE

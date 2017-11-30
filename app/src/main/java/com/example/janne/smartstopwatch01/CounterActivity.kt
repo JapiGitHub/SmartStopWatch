@@ -51,6 +51,7 @@ class CounterActivity : AppCompatActivity() {
     lateinit var series: LineGraphSeries<DataPoint>
     lateinit var seriesHITs: PointsGraphSeries<DataPoint>
     lateinit var thresholdLineinGraph : LineGraphSeries<DataPoint>
+    lateinit var seriesHITsShadow: PointsGraphSeries<DataPoint>
     var Xline : Double = 0.0
     var Yline : Double = 0.0
     var x : Double = 0.0
@@ -140,6 +141,7 @@ class CounterActivity : AppCompatActivity() {
 
         series = LineGraphSeries<DataPoint>()
         seriesHITs = PointsGraphSeries<DataPoint>()
+        seriesHITsShadow = PointsGraphSeries<DataPoint>()
 
         //thresholdLineinGraph = LineGraphSeries<DataPoint>()
         thresholdLineinGraph = LineGraphSeries<DataPoint>()
@@ -152,9 +154,12 @@ class CounterActivity : AppCompatActivity() {
         series.isDrawBackground = true
         val graphColorBluish = Color.argb(200, 161, 161, 147)
         series.backgroundColor = graphColorBluish
+        val OrangeShadow = Color.argb(140,255,161,99)
 
         seriesHITs.color = ThresholdColorOrange
-        seriesHITs.size = 50f
+        seriesHITs.size = 20f
+            seriesHITsShadow.color = OrangeShadow
+            seriesHITsShadow.size = 50f
 
         series.thickness = 2
 
@@ -242,6 +247,7 @@ class CounterActivity : AppCompatActivity() {
                         graph.removeAllSeries()
                         graph.addSeries(series)
                         graph.addSeries(seriesHITs)
+                        graph.addSeries(seriesHITsShadow)
                         graph.addSeries(thresholdLineinGraph)
                     }
                 }
@@ -366,8 +372,10 @@ class CounterActivity : AppCompatActivity() {
             //jottei HIT punainen pallo mene chartista yli...
             if (ViimeisinMaxAmplitude > 32000) {
                 seriesHITs.appendData(DataPoint(x, 30000.0), true, 25)
+                seriesHITsShadow.appendData(DataPoint(x, 30000.0), true, 25)
             } else {
                 seriesHITs.appendData(DataPoint(x, ViimeisinMaxAmplitude), true, 25)
+                seriesHITsShadow.appendData(DataPoint(x, ViimeisinMaxAmplitude), true, 25)
             }
 
             runOnUiThread {

@@ -152,13 +152,6 @@
                 android:id="@+id/graph"
                 android:layout_marginTop="7dp"/>
     </FrameLayout>
-    <TextView
-            android:gravity="center_horizontal"
-            android:text=" Count : 0"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content" android:id="@+id/tv_Count" android:textSize="55sp"
-            android:fontFamily="sans-serif-condensed" android:textColor="#464646"
-            android:textStyle="bold"/>
     <LinearLayout
             android:padding="8dp"
             android:orientation="horizontal"
@@ -182,6 +175,13 @@
                 android:layout_marginRight="8dp" app:layout_constraintRight_toRightOf="parent"
                 app:layout_constraintLeft_toRightOf="@+id/textView" android:layout_marginLeft="8dp"/>
     </LinearLayout>
+    <TextView
+            android:gravity="center_horizontal"
+            android:text=" Count : 0"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content" android:id="@+id/tv_Count" android:textSize="55sp"
+            android:fontFamily="sans-serif-condensed" android:textColor="#464646"
+            android:textStyle="bold"/>
 
     <!-- TÄMÄ on se layoutti missä pitää saada vertical seekbar toimimaan joten kokeilen saada ne "päällekkäin" framalayoutilla     -->
 
