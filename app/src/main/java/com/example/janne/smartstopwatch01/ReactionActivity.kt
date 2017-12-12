@@ -172,7 +172,6 @@ class ReactionActivity : AppCompatActivity() {
 
 
         // NAPIT
-        btn_ResetReaction.onClick        { resetProgress() }
         btn_StartReaction.onClick              {
             btn_StartReaction.backgroundResource = R.drawable.roundedbuttonsorange
             CountIsOn = true
@@ -556,6 +555,12 @@ println("KONSOLI   : viimeisin max AMP   :   $ViimeisinMaxAmplitude")
         RandomMax = et_Random_Max.text.toString().toInt() * 1000
         RoundStartsIn = et_RoundStartsInSeconds.text.toString().toInt() * 1000
 
+        if (RandomMin > RandomMax) {
+            RandomMin = RandomMax-1
+            runOnUiThread { toast("Minimum cant be bigger than maximum") }
+            et_Random_Min.text = et_Random_Max.text
+        }
+
         //poistaa näkyvistä turhat asetukset erän ajaksi
         et_Random_Min.visibility = View.GONE
         et_Random_Max.visibility = View.GONE
@@ -822,12 +827,9 @@ println("KONSOLI   : viimeisin max AMP   :   $ViimeisinMaxAmplitude")
             //println("KONSOLI   : total:${Thread.activeCount()}  this.ID:${Thread.currentThread().id}  $SAMPLE_DELAY ms,  ${ViimeisinMaxAmplitude.toInt()} BING BING !!!!!")
         if (CountIsOn) {
             runOnUiThread {
-                tv_info3.text = "Your Reaction was $ReactionResultTIME ms"
+                tv_info3.text = "Your Reaction was ${ReactionResultTIME.toDouble()/1000} s"
                 tv_Wait.visibility = View.VISIBLE
             }
-
-
-
 
 
             count = count + 1
@@ -985,8 +987,8 @@ println("KONSOLI   : viimeisin max AMP   :   $ViimeisinMaxAmplitude")
 
         thread?.interrupt()
         //CalibrationThread!!.interrupt()
-        audioRec!!.stop()
-        audioRec!!.release()
+        audioRec?.stop()
+        audioRec?.release()
         audioRec = null
         startActivity(Intent(this@ReactionActivity, MainMenuActivity::class.java))
         finish()

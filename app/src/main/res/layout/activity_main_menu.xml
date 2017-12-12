@@ -88,7 +88,7 @@
                         android:fontFamily="sans-serif-condensed" android:textColor="#5b605f"/>
                 <Button
                         android:layout_gravity="center_horizontal"
-                        android:text="Count REPs"
+                        android:text="Count repetitions"
                         android:background="@drawable/roundedbuttons"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
@@ -133,7 +133,7 @@
                         android:text="version: 0.9"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content" android:id="@+id/textView8" android:textColor="#5b605f"
-                        android:fontFamily="sans-serif-condensed" android:textSize="10sp         "/>
+                        android:fontFamily="sans-serif-condensed" android:textSize="10sp"/>
             </LinearLayout>
 
         </ScrollView>
@@ -141,7 +141,7 @@
                 android:layout_gravity="bottom"
                 android:id="@+id/adViewTestii"
                 app:adSize="BANNER"
-                app:adUnitId="ca-app-pub-3940256099942544/6300978111"
+                app:adUnitId="ca-app-pub-1077699782732928/4455742920"
                 android:layout_centerHorizontal="true"
                 android:layout_alignParentBottom="true"
                 android:layout_width="wrap_content"

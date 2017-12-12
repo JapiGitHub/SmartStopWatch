@@ -75,9 +75,9 @@ class MainMenuActivity : AppCompatActivity() {
 
         //AdMob
             if (Constants.type === Constants.Type.FREE) {
-                MobileAds.initialize(this, "ca-app-pub-3940256099942544~3347511713")
+                MobileAds.initialize(this, "ca-app-pub-1077699782732928~8604184577")
                 var mAdView = findViewById<AdView>(R.id.adViewTestii)
-                val adRequesti = AdRequest.Builder().addTestDevice(AdRequest.DEVICE_ID_EMULATOR).build()
+                val adRequesti = AdRequest.Builder().build()
                 mAdView.loadAd(adRequesti)
             }
 
