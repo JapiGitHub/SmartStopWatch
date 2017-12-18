@@ -1,4 +1,4 @@
-package com.example.janne.smartstopwatch01
+package com.valueadders.janne.smartstopwatch01
 
 import android.Manifest
 import android.app.Activity
@@ -30,10 +30,7 @@ import com.jjoe64.graphview.series.PointsGraphSeries
 import kotlinx.android.synthetic.main.activity_reaction_v2.*
 import me.toptas.fancyshowcase.FancyShowCaseView
 import org.jetbrains.anko.backgroundResource
-import org.jetbrains.anko.longToast
 import org.jetbrains.anko.sdk25.coroutines.onClick
-import org.jetbrains.anko.sdk25.coroutines.onFocusChange
-import org.jetbrains.anko.sdk25.coroutines.onTouch
 import org.jetbrains.anko.toast
 import java.io.FileNotFoundException
 import java.io.IOException

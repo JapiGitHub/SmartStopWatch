@@ -1,4 +1,4 @@
-package com.example.janne.smartstopwatch01
+package com.valueadders.janne.smartstopwatch01
 
 import android.Manifest
 import android.content.Context

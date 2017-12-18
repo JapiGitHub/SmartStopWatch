@@ -1,17 +1,15 @@
-package com.example.janne.smartstopwatch01
+package com.valueadders.janne.smartstopwatch01
 
 import android.Manifest
 import android.content.Intent
 import android.content.pm.ActivityInfo
 import android.content.pm.PackageManager
-import android.graphics.Color
 import android.os.Bundle
 import android.support.v4.app.ActivityCompat
 import android.support.v7.app.AppCompatActivity
-import android.view.*
 import android.view.Window
 import android.view.WindowManager
-import android.widget.Button
+import com.valueadders.janne.smartstopwatch01.Constants
 import com.google.android.gms.ads.AdRequest
 import com.google.android.gms.ads.AdView
 import com.google.android.gms.ads.MobileAds
@@ -89,11 +87,11 @@ class MainMenuActivity : AppCompatActivity() {
             }
 
         buttReactionHistory.onClick         {
-            buttReactionHistory.backgroundResource = R.drawable.roundedbuttonsorange
             if (Constants.type === Constants.Type.FREE)
             {
                 runOnUiThread { toast("Buy the PRO version to see your history") }
             } else {
+                buttReactionHistory.backgroundResource = R.drawable.roundedbuttonsorange
                 startActivity(Intent(this@MainMenuActivity,ReactionHistoryActivity::class.java))
             }
         }
@@ -104,11 +102,11 @@ class MainMenuActivity : AppCompatActivity() {
         }
 
         buttCountHistory.onClick            {
-            buttCountHistory.backgroundResource = R.drawable.roundedbuttonsorange
             if (Constants.type === Constants.Type.FREE)
             {
                 runOnUiThread { toast("Buy the PRO version to see your history") }
             } else {
+                buttCountHistory.backgroundResource = R.drawable.roundedbuttonsorange
                 startActivity(Intent(this@MainMenuActivity,CountHistoryActivity::class.java))
             }
         }

@@ -6,7 +6,7 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:background="#ffffff"
-        tools:context="com.example.janne.smartstopwatch01.MainMenuActivity">
+        tools:context="com.valueadders.janne.smartstopwatch01.MainMenuActivity">
 
     <TextView
             android:text="0:0:0:0"

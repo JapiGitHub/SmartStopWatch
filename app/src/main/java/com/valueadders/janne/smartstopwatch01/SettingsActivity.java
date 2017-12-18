@@ -1,4 +1,4 @@
-package com.example.janne.smartstopwatch01;
+package com.valueadders.janne.smartstopwatch01;
 
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;

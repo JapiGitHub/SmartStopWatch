@@ -1,4 +1,4 @@
-package com.example.janne.smartstopwatch01
+package com.valueadders.janne.smartstopwatch01
 
 import android.content.Intent
 import android.content.pm.ActivityInfo
@@ -15,7 +15,6 @@ import android.view.WindowManager
 import android.widget.TextView
 import org.jetbrains.anko.backgroundResource
 import org.jetbrains.anko.longToast
-import org.jetbrains.anko.toast
 import java.util.*
 
 

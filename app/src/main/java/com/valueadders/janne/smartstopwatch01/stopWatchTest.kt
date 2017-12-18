@@ -1,18 +1,9 @@
-package com.example.janne.smartstopwatch01
+package com.valueadders.janne.smartstopwatch01
 
-import android.content.Intent
 import android.support.v7.app.AppCompatActivity
 import android.os.Bundle
-import android.support.annotation.UiThread
 import kotlinx.android.synthetic.main.activity_stop_watch_test.*
-import kotlinx.coroutines.experimental.CommonPool
-import kotlinx.coroutines.experimental.launch
-import org.jetbrains.anko.custom.async
-import org.jetbrains.anko.doAsync
 import org.jetbrains.anko.sdk25.coroutines.onClick
-import org.jetbrains.anko.toast
-import java.util.concurrent.TimeUnit.*
-
 
 
 class stopWatchTest : AppCompatActivity() {

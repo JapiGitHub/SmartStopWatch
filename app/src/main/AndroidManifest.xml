@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-          package="com.example.janne.smartstopwatch01">
+          package="com.valueadders.janne.smartstopwatch01">
 
     <!-- permission AdMob mainokseen = netti -->
     <uses-permission android:name="android.permission.INTERNET"></uses-permission>
@@ -19,7 +19,7 @@
             android:roundIcon="@mipmap/ic_launcher_round"
             android:supportsRtl="true"
             android:theme="@style/AppTheme">
-        <activity android:name=".MainMenuActivity"
+        <activity android:name="com.valueadders.janne.smartstopwatch01.MainMenuActivity"
 
                   android:noHistory="true"
                   android:clearTaskOnLaunch ="true">
@@ -30,25 +30,25 @@
                 <category android:name="android.intent.category.LAUNCHER"/>
             </intent-filter>
         </activity>
-        <activity android:name=".ReactionActivity"
+        <activity android:name="com.valueadders.janne.smartstopwatch01.ReactionActivity"
                   android:noHistory="true">
         </activity>
-        <activity android:name=".CounterActivity"
+        <activity android:name="com.valueadders.janne.smartstopwatch01.CounterActivity"
                   android:noHistory="true"
                   android:screenOrientation="sensorPortrait"
                   android:configChanges="keyboardHidden|orientation|screenSize">
         </activity>
-        <activity android:name=".SettingsActivity">
+        <activity android:name="com.valueadders.janne.smartstopwatch01.SettingsActivity">
         </activity>
-        <activity android:name=".ReactionHistoryActivity">
+        <activity android:name="com.valueadders.janne.smartstopwatch01.ReactionHistoryActivity">
         </activity>
-        <activity android:name=".CountHistoryActivity">
+        <activity android:name="com.valueadders.janne.smartstopwatch01.CountHistoryActivity">
         </activity>
-        <activity android:name=".stopWatchTest">
+        <activity android:name="com.valueadders.janne.smartstopwatch01.stopWatchTest">
         </activity>
-        <activity android:name=".RoundTimerActivity">
+        <activity android:name="com.valueadders.janne.smartstopwatch01.RoundTimerActivity">
         </activity>
-        <activity android:name=".ReactionEndingActivity">
+        <activity android:name="com.valueadders.janne.smartstopwatch01.ReactionEndingActivity">
         </activity>
     </application>
 

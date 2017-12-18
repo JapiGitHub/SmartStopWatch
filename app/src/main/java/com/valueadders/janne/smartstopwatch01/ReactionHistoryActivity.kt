@@ -1,11 +1,10 @@
-package com.example.janne.smartstopwatch01
+package com.valueadders.janne.smartstopwatch01
 
 import android.content.Context
 import android.content.Intent
 import android.graphics.Color
 import android.support.v7.app.AppCompatActivity
 import android.os.Bundle
-import android.view.View
 import android.view.Window
 import android.view.WindowManager
 import com.jjoe64.graphview.GraphView
@@ -106,26 +105,35 @@ private fun resetReactionHistory() {
 
     private fun readLines () {
 
-        val path = getFilesDir()
-        println("KONSOLI   : path :  $path")
+        try {
+            val path = getFilesDir()
+            println("KONSOLI   : path :  $path")
 
-        //val inputStream : InputStream = File("/data/user/0/com.example.janne.smartstopwatch01/files/score_reaction.txt").inputStream()
-        val inputStream : InputStream = File("$path/score_reaction.txt").inputStream()
-        val lineList = mutableListOf<String>()
+            //val inputStream : InputStream = File("/data/user/0/com.example.janne.smartstopwatch01/files/score_reaction.txt").inputStream()
+            val inputStream : InputStream = File("$path/score_reaction.txt").inputStream()
+            val lineList = mutableListOf<String>()
 
-        inputStream.bufferedReader().useLines { lines -> lines.forEach { lineList.add(it)} }
+            inputStream.bufferedReader().useLines { lines -> lines.forEach { lineList.add(it)} }
 
-        //lineList.forEach{println(">  " + it)}
-        for (i in 0..(lineList.size-1)) {
-            println("KONSOLI   : lineLIST :  ${lineList[i]}")
-            seriesReactionScore.appendData(DataPoint((i+1.toDouble()),lineList[i].toDouble()), true, 25)
+            //lineList.forEach{println(">  " + it)}
+            for (i in 0..(lineList.size-1)) {
+                println("KONSOLI   : lineLIST :  ${lineList[i]}")
+                seriesReactionScore.appendData(DataPoint((i+1.toDouble()),lineList[i].toDouble()), true, 25)
+            }
+
+
+            //graph
+            //seriesReactionScore.appendData(DataPoint(1.0,250.0), true, 25)
+
+            yourProgressReaction.addSeries(seriesReactionScore)
+        } catch (e: FileNotFoundException) {
+            e.printStackTrace()
+        } catch (e: IOException) {
+            e.printStackTrace()
         }
 
 
-        //graph
-        //seriesReactionScore.appendData(DataPoint(1.0,250.0), true, 25)
 
-        yourProgressReaction.addSeries(seriesReactionScore)
 
 
     }
