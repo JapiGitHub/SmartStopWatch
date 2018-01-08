@@ -9,6 +9,7 @@ import android.support.v4.app.ActivityCompat
 import android.support.v7.app.AppCompatActivity
 import android.view.Window
 import android.view.WindowManager
+//import com.example.janne.smartstopwatch01.Constants
 import com.valueadders.janne.smartstopwatch01.Constants
 import com.google.android.gms.ads.AdRequest
 import com.google.android.gms.ads.AdView
@@ -72,12 +73,12 @@ class MainMenuActivity : AppCompatActivity() {
         ActivityCompat.requestPermissions(this, permissions, REQUEST_RECORD_AUDIO_PERMISSION)
 
         //AdMob
-            if (Constants.type === Constants.Type.FREE) {
+/*            if (Constants.type === Constants.Type.FREE) {
                 MobileAds.initialize(this, "ca-app-pub-1077699782732928~8604184577")
                 var mAdView = findViewById<AdView>(R.id.adViewTestii)
                 val adRequesti = AdRequest.Builder().build()
                 mAdView.loadAd(adRequesti)
-            }
+            }*/
 
         //buttons
 

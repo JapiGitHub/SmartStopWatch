@@ -982,6 +982,8 @@ println("KONSOLI   : viimeisin max AMP   :   $ViimeisinMaxAmplitude")
     override fun onBackPressed() {
         super.onBackPressed()
 
+        RoundEnding = true
+
         thread?.interrupt()
         //CalibrationThread!!.interrupt()
         audioRec?.stop()

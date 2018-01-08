@@ -13,6 +13,7 @@ import android.view.View
 import android.view.Window
 import android.view.WindowManager
 import android.widget.TextView
+import android.widget.Toast
 import org.jetbrains.anko.backgroundResource
 import org.jetbrains.anko.longToast
 import java.util.*
@@ -30,12 +31,20 @@ class RoundTimerActivity : AppCompatActivity() {
     private var minutes = 0
     private var seconds = 0
     private var millis = 0
+
+    private var continuousMinutes = 0
+    private var continuousSeconds = 0
+    private var continuousHours = 0
+    private var continuousRounds : Boolean = false
+    private var countRounds = 1
+
     private var aikaTekstiksi : Long = 0
     private var PauseMillisLeft : Long = 0
     private var RoundLengthMillis : Long = 0
     private var RoundStartsIn : Long = 0
 
     private var RoundHasStarted : Boolean = false
+
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -60,6 +69,11 @@ class RoundTimerActivity : AppCompatActivity() {
 
 
     private fun StartButtonPress() {
+
+        //tallenna erän pituus
+        continuousMinutes = et_Minutes_RoundTimer.text.toString().toInt()
+        continuousHours = et_Hours_RoundTimer.text.toString().toInt()
+        continuousSeconds = et_Seconds_RoundTimer.text.toString().toInt()
 
         when (butt_RoundTimerStart.text) {
             "Start"     -> startti()
@@ -199,15 +213,29 @@ class RoundTimerActivity : AppCompatActivity() {
         butt_RoundTimerStart.backgroundResource = R.drawable.roundedbuttonsorange
         RoundStartsIn = et_RoundStartsIn_RoundTimer.text.toString().toLong() * 1000
 
+        tv_countRounds.visibility = View.VISIBLE
+
         et_RoundStartsIn_RoundTimer.visibility = View.GONE
         tv_infoRT1.visibility = View.GONE
+        et_RestBetweenRounds.visibility = View.GONE
+        tv_infoRT3.visibility = View.GONE
+        checkBoxContRounds.visibility = View.GONE
+        tv_infoRT2.visibility = View.GONE
 
-        butt_RoundTimerStart.text = "Pause"
+        runOnUiThread {
+            tv_countRounds.text = "Round : $countRounds"
+            butt_RoundTimerStart.text = "Pause"
+        }
+
 
 
         RoundLengthMillis = (et_Hours_RoundTimer.text.toString().toLong() * 60 * 60 * 1000) + (et_Minutes_RoundTimer.text.toString().toLong() * 1000 * 60) + (et_Seconds_RoundTimer.text.toString().toLong() * 1000)
 
-        runOnUiThread { longToast("Starting in ${RoundStartsIn / 1000} sec!") }
+        if (continuousRounds == false) {
+            runOnUiThread { longToast("Starting in ${RoundStartsIn / 1000} sec!") }
+        } else {
+            RoundStartsIn = 0
+        }
 
         //jotta saadaan erän alkuun 5 sec
         var StartUpTimer = Timer()
@@ -243,6 +271,11 @@ class RoundTimerActivity : AppCompatActivity() {
                             val BoxingBell_ShortLoudEnd = MediaPlayer.create(applicationContext, R.raw.boxingbellshortloud)
                             BoxingBell_ShortLoudEnd.start()
                             RoundHasStarted = false
+
+                            if (checkBoxContRounds.isChecked) {
+                                nextRound()
+                            }
+
                         }
 
                     }.start()
@@ -250,6 +283,33 @@ class RoundTimerActivity : AppCompatActivity() {
 
             }}, RoundStartsIn)
         // tv_RoundTimer.postDelayed(Runnable { updateTime() }, 50)
+    }
+
+    private fun nextRound() {
+
+        countRounds = countRounds + 1
+
+        continuousRounds = true
+
+        var RestTimer = Timer()
+
+        //resets stopwatch to beginning of first round so it can start going down again
+        runOnUiThread {
+            et_Minutes_RoundTimer.setText(continuousMinutes.toString(),TextView.BufferType.EDITABLE)
+            et_Hours_RoundTimer.setText(continuousHours.toString(),TextView.BufferType.EDITABLE)
+            et_Seconds_RoundTimer.setText(continuousSeconds.toString(),TextView.BufferType.EDITABLE)
+
+            longToast("REST next round starts in ${et_RestBetweenRounds.text.toString()} seconds")
+        }
+
+            RestTimer.schedule(object : TimerTask() {
+                override fun run () {
+                    startti()
+                }
+            },et_RestBetweenRounds.text.toString().toLong()*1000)
+                //delay = et_RestBetweenRounds.text.toInt()
+
+
     }
 
     override fun onBackPressed() {
